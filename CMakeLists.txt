@@ -40,6 +40,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
+FetchContent_Declare(
+        stduuid
+        GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
+        GIT_TAG        v1.2.3
+)
+
+# Make the library available to the build
+FetchContent_MakeAvailable(stduuid)
 # Створення бібліотеки ImGui
 add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/imgui.cpp
@@ -49,11 +57,35 @@ add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+        components/Component.cpp
+        components/Component.h
 )
 target_include_directories(imgui_lib PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 
 # --- Основний проект ---
-add_executable(viewer main.cpp test_models/birds.c)
+add_executable(viewer main.cpp test_models/birds.c
+        core/InputHandler.cpp
+        core/InputHandler.h
+        BiBuild.h
+        core/SceneManager.cpp
+        core/SceneManager.h
+        core/SceneObject.cpp
+        core/SceneObject.h
+        components/MeshComponent.cpp
+        components/MeshComponent.h
+        components/LightComponent.cpp
+        components/LightComponent.h
+        components/TransformComponent.cpp
+        components/TransformComponent.h
+        components/CameraComponent.cpp
+        components/CameraComponent.h
+        core/ResourceManager.cpp
+        core/ResourceManager.h
+        core/Mesh.cpp
+        core/Mesh.h
+        core/RenderSystem.cpp
+        core/RenderSystem.h
+        helper_functions/helper.h)
 
 # Знаходимо системний OpenGL
 find_package(OpenGL REQUIRED)
@@ -65,4 +97,5 @@ target_link_libraries(viewer PRIVATE
         glad          # Додано GLAD
         glm::glm      # Додано GLM
         OpenGL::GL
+        stduuid
 )

@@ -1,9 +1,12 @@
 #include <iostream>
 #include <vector>
+#include <random>
 
 // Include GLAD before GLFW
+#include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <uuid.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,7 +15,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
+#include "BiBuild.h"
+#include "core/RenderSystem.h"
 #include "test_models/birds.h"
 
 const int WIN_WIDTH  = 800;
@@ -167,6 +171,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
     }
 }
 
+
 bool initOpenGL() {
     resources.program = createProgram(srcVertexShader, srcFragmentShader);
     if (resources.program == 0) return false;
@@ -225,13 +230,18 @@ int main() {
         return -1;
     }
 
+    BiBuild::SceneManager scene = BiBuild::SceneManager();
+    BiBuild::RenderSystem render_system;
+
+    render_system.Initialize(WIN_WIDTH,WIN_HEIGHT,scene.cameraObject);
     // Callbacks setup
+    BiBuild::InputManager::Init(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
 
-    if (!initOpenGL()) return -1;
+    // if (!initOpenGL()) return -1;
 
     // Trigger initial projection setup
     framebuffer_size_callback(window, WIN_WIDTH, WIN_HEIGHT);
@@ -244,6 +254,14 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
+    auto obj = scene.CreateObject("bird");
+    auto mesh = obj->GetComponent<BiBuild::MeshComponent>();
+    mesh->vertices = std::vector<BiBuild::Vertex>(birds_data.nVertices);
+    for (int i = 0; i<birds_data.nVertices; i+=3) {
+        mesh->vertices[0].position.x =  birds_data.vertices[i];
+        mesh->vertices[0].position.y =  birds_data.vertices[i+1];
+        mesh->vertices[0].position.z =  birds_data.vertices[i+2];
+    }
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -267,10 +285,17 @@ int main() {
         // }
 
         // Update Matrix
-        state.model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -7.0f)) *
-                      glm::rotate(glm::mat4(1.0f), glm::radians(state.pitch), glm::vec3(1.0f, 0.0f, 0.0f)) *
-                      glm::rotate(glm::mat4(1.0f), glm::radians(state.yaw), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                      glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
+        // state.model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -7.0f)) *
+        //               glm::rotate(glm::mat4(1.0f), glm::radians(state.pitch), glm::vec3(1.0f, 0.0f, 0.0f)) *
+        //               glm::rotate(glm::mat4(1.0f), glm::radians(state.yaw), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        //               glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
+
+        if (BiBuild::InputManager::IsKeyPressed(GLFW_KEY_LEFT)) {
+            state.scale = std::clamp(state.scale - 0.01f, 0.1f , 2.0f);
+        }
+        if (BiBuild::InputManager::IsKeyPressed(GLFW_KEY_RIGHT)) {
+            state.scale = std::clamp(state.scale + 0.01f, 0.1f , 2.0f);
+        }
 
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -285,24 +310,28 @@ int main() {
         ImGui::End();
 
         // Render OpenGL
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(resources.program);
 
-        glUniformMatrix4fv(handles.PVM, 1, GL_FALSE, glm::value_ptr(state.projection * state.model));
-        glUniform1f(handles.t, state.t);
-        glUniform3fv(handles.color, 1, birds_data.color);
-        glUniform1f(handles.scale, state.scale);
+        render_system.UpdateAndDraw(scene.objects, scene.cameraObject->GetComponent<BiBuild::CameraComponent>()->GetViewMat(),scene.cameraObject->GetComponent<BiBuild::CameraComponent>()->GetProjectionMat());
 
-        glBindVertexArray(resources.vao);
-        glBindBuffer(GL_ARRAY_BUFFER, resources.vbo);
 
-        size_t frameOffset = state.frame * birds_data.nVertices * 3 * sizeof(float);
-        glVertexAttribPointer(handles.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)frameOffset);
-
-        size_t nextFrameOffset = state.nextFrame * birds_data.nVertices * 3 * sizeof(float);
-        glVertexAttribPointer(handles.NextPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)nextFrameOffset);
-
-        glDrawElements(draw_types[state.draw_type], birds_data.nFaces * 3, GL_UNSIGNED_SHORT, (void*)0);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // glUseProgram(resources.program);
+        //
+        // glUniformMatrix4fv(handles.PVM, 1, GL_FALSE, glm::value_ptr(state.projection * state.model));
+        // glUniform1f(handles.t, state.t);
+        // glUniform3fv(handles.color, 1, birds_data.color);
+        // glUniform1f(handles.scale, state.scale);
+        //
+        // glBindVertexArray(resources.vao);
+        // glBindBuffer(GL_ARRAY_BUFFER, resources.vbo);
+        //
+        // size_t frameOffset = state.frame * birds_data.nVertices * 3 * sizeof(float);
+        // glVertexAttribPointer(handles.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)frameOffset);
+        //
+        // size_t nextFrameOffset = state.nextFrame * birds_data.nVertices * 3 * sizeof(float);
+        // glVertexAttribPointer(handles.NextPositions, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)nextFrameOffset);
+        //
+        // glDrawElements(draw_types[state.draw_type], birds_data.nFaces * 3, GL_UNSIGNED_SHORT, (void*)0);
 
         // Render ImGui
         ImGui::Render();
