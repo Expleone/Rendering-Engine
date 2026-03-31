@@ -15,10 +15,16 @@ namespace BiBuild {
         GLint color;
     } handles;
 
-    void RenderSystem::Initialize(int width, int height, SceneObject* cameraObject) {
+    void RenderSystem::Initialize(GLFWwindow *window, int width, int height, SceneObject* cameraObject) {
         screenWidth = width;
         screenHeight = height;
         camera = cameraObject ? cameraObject->GetComponent<CameraComponent>() : nullptr;
+        glfwSetWindowUserPointer(window, this);
+        glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int w, int h) {
+            if (auto* self = static_cast<RenderSystem*>(glfwGetWindowUserPointer(win))) {
+                self->OnWindowResize(win, w, h);
+            }
+        });
         if (camera) {
             camera->aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
         }
@@ -69,8 +75,16 @@ namespace BiBuild {
         std::string vertStr;
         std::string fragStr;
 
-        vertStr = BiBuild::Helper::read_file("./shaders/vertex/base.vert");
-        fragStr = BiBuild::Helper::read_file("./shaders/fragment/base.frag");
+        auto loadShaderWithFallback = [](const char* primaryPath, const char* fallbackPath) {
+            std::string shader = BiBuild::Helper::read_file(primaryPath);
+            if (shader.empty()) {
+                shader = BiBuild::Helper::read_file(fallbackPath);
+            }
+            return shader;
+        };
+
+        vertStr = loadShaderWithFallback("./shaders/vertex/base.vert", "../shaders/vertex/base.vert");
+        fragStr = loadShaderWithFallback("./shaders/fragment/base.frag", "../shaders/fragment/base.frag");
 
         defaultShaderProgram = createProgram(vertStr.c_str(), fragStr.c_str());
         handles.position = glGetAttribLocation(defaultShaderProgram, "aPosition");
@@ -83,6 +97,10 @@ namespace BiBuild {
 
     void RenderSystem::UpdateAndDraw(const std::vector<std::unique_ptr<SceneObject>>& sceneObjects, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (defaultShaderProgram == 0) {
+            return;
+        }
+
         glUseProgram(defaultShaderProgram);
         for (const std::unique_ptr<SceneObject>& objPtr : sceneObjects) {
             SceneObject* obj = objPtr.get();
@@ -100,7 +118,10 @@ namespace BiBuild {
             // 2. Standard Drawing Code
             glBindVertexArray(mesh->VAO);
             glUniformMatrix4fv(handles.PVM, 1, GL_FALSE, glm::value_ptr(projectionMatrix*viewMatrix*modelMatrix));
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
+            if (handles.color >= 0) {
+                glUniform3f(handles.color, 0.9f, 0.85f, 0.2f);
+            }
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->indices.size()), GL_UNSIGNED_INT, nullptr);
         }
     }
 
@@ -123,8 +144,20 @@ namespace BiBuild {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(mesh->indices.size() * sizeof(unsigned int)), mesh->indices.data(), GL_STATIC_DRAW);
 
         // ... set vertex attribute pointers ...
-        glVertexAttribPointer(handles.position, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) - sizeof(glm::vec3), (void*)0);
+        if (handles.position >= 0) {
+            glVertexAttribPointer(handles.position, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
+            glEnableVertexAttribArray(handles.position);
+        }
 
         glBindVertexArray(0);
+    }
+
+    void RenderSystem::OnWindowResize(GLFWwindow* window, int  width, int height) {
+        screenWidth = width;
+        screenHeight = height;
+        glViewport(0, 0, screenWidth, screenHeight);
+        if (camera) {
+            camera->aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+        }
     }
 } // BiBuild

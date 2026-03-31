@@ -12,7 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "imgui_impl_opengl3_loader.h"
+#include <glad/glad.h>
 
 namespace BiBuild {
     struct Vertex {
@@ -31,7 +31,7 @@ namespace BiBuild {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         // std::string topology = "Triangles";
-        MeshComponent(SceneObject* owner) : Component(owner){}
+        MeshComponent(SceneObject* owner) : Component(owner), vertices() {}
         ~MeshComponent() override {
             // Must clean up GPU memory when the component is destroyed
             glDeleteVertexArrays(1, &VAO);

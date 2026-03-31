@@ -85,7 +85,8 @@ add_executable(viewer main.cpp test_models/birds.c
         core/Mesh.h
         core/RenderSystem.cpp
         core/RenderSystem.h
-        helper_functions/helper.h)
+        helper_functions/helper.h
+        )
 
 # Знаходимо системний OpenGL
 find_package(OpenGL REQUIRED)

@@ -16,7 +16,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "../helper_functions/helper.h"
-#include "imgui_impl_opengl3_loader.h"
 #include "../components/MeshComponent.h"
 #include  "SceneObject.h"
 #include "../components/CameraComponent.h"
@@ -37,13 +36,14 @@ namespace BiBuild {
         // Private helper methods
         void CompileShaders();
         void UpdateGPUBuffers(MeshComponent* mesh);
+        void OnWindowResize(GLFWwindow *window, int width, int height);
 
     public:
         RenderSystem() = default;
         ~RenderSystem(); // Clean up shaders and global buffers here
 
         // Called once when the app starts
-        void Initialize(int width, int height, SceneObject* cameraObject);
+        void Initialize(GLFWwindow *window, int width, int height, SceneObject* cameraObject);
 
         GLuint compileShader(GLenum type, const char* source) {
             GLuint shader = glCreateShader(type);
@@ -83,7 +83,7 @@ namespace BiBuild {
 
 
         // Called if the user resizes the window
-        void OnWindowResize(int width, int height);
+
 
         // Called every single frame
         void UpdateAndDraw(const std::vector<std::unique_ptr<SceneObject>>& sceneObjects, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);

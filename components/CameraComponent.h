@@ -11,15 +11,27 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Component.h"
+#include "GLFW/glfw3.h"
 
 namespace BiBuild {
+
+
+
     enum class ProjectionType{Perspective, Orthographic};
 
     class CameraComponent : public Component{
     public:
+        struct CameraControlState {
+            float yawDegrees = -90.0f;
+            float pitchDegrees = 0.0f;
+            float mouseSensitivity = 0.12f;
+            bool isMouseCaptured = false;
+            double lastMouseX = 0.0;
+            double lastMouseY = 0.0;
+        } lookState;
         float fov = 60;
         float nearPlane = 0.1f;
-        float farPlane = 100.0f;
+        float farPlane = 10000000.0f;
         float aspectRatio = 16.0/9.0;
         ProjectionType projection = ProjectionType::Perspective;
 
@@ -29,6 +41,10 @@ namespace BiBuild {
 
         glm::mat4 GetProjectionMat();
         glm::mat4 GetViewMat();
+
+        static glm::vec3 GetForwardFromYawPitch(float yawDegrees, float pitchDegrees);
+        glm::mat4 BuildCameraViewMatrix() const;
+        void UpdateCameraFromInput(float deltaTime);
     };
 }
 
