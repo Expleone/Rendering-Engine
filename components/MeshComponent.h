@@ -15,29 +15,32 @@
 #include <glad/glad.h>
 
 namespace BiBuild {
-    struct Vertex {
-        glm::vec3 position;  // Where the vertex is (X, Y, Z)
-        glm::vec3 normal;    // Which way the surface faces (for lighting)
-        glm::vec2 texCoords; // Where the texture wraps (U, V)
-        glm::vec3 color;     // Vertex-specific colors
-    };
+    class Mesh;
+    // struct Vertex {
+    //     glm::vec3 position;  // Where the vertex is (X, Y, Z)
+    //     glm::vec3 normal;    // Which way the surface faces (for lighting)
+    //     glm::vec2 texCoords; // Where the texture wraps (U, V)
+    //     glm::vec3 color;     // Vertex-specific colors
+    // };
 
     class MeshComponent : public Component {
     public:
-        unsigned int VAO = 0;
-        unsigned int VBO = 0;
-        unsigned int EBO = 0;
-        bool isDirty = true;
-        std::vector<Vertex> vertices;
-        std::vector<unsigned int> indices;
+        Mesh* mesh = nullptr;
+        MeshComponent(SceneObject* owner) : Component(owner){}
+        // unsigned int VAO = 0;
+        // unsigned int VBO = 0;
+        // unsigned int EBO = 0;
+        // bool isDirty = true;
+        // std::vector<Vertex> vertices;
+        // std::vector<unsigned int> indices;
         // std::string topology = "Triangles";
-        MeshComponent(SceneObject* owner) : Component(owner), vertices() {}
-        ~MeshComponent() override {
-            // Must clean up GPU memory when the component is destroyed
-            glDeleteVertexArrays(1, &VAO);
-            glDeleteBuffers(1, &VBO);
-            glDeleteBuffers(1, &EBO);
-        }
+        // MeshComponent(SceneObject* owner) : Component(owner), vertices() {}
+        // ~MeshComponent() override {
+        //     // Must clean up GPU memory when the component is destroyed
+        //     glDeleteVertexArrays(1, &VAO);
+        //     glDeleteBuffers(1, &VBO);
+        //     glDeleteBuffers(1, &EBO);
+        // }
     };
 }
 

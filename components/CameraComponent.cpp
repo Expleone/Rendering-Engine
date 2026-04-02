@@ -16,7 +16,11 @@ namespace BiBuild {
         }
     }
 
-    glm::mat4 CameraComponent::FastCameraInverse(const glm::mat4& worldMatrix) {
+    glm::mat4 CameraComponent::FastCameraInverse() {
+        if (!this->owner || !this->owner->transform) {
+            return {1.0f};
+        }
+        const glm::mat4& worldMatrix = this->owner->transform->worldMatrix;
         glm::mat3 rotation(worldMatrix);
         glm::mat3 rotationTransposed = glm::transpose(rotation);
         glm::vec3 translation(worldMatrix[3]);
@@ -31,7 +35,7 @@ namespace BiBuild {
         return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
     }
     glm::mat4 CameraComponent::GetViewMat() {
-        return FastCameraInverse(owner->transform->worldMatrix);;
+        return FastCameraInverse();;
     }
 
     glm::vec3 CameraComponent::GetForwardFromYawPitch(float yawDegrees, float pitchDegrees) {
@@ -102,7 +106,7 @@ namespace BiBuild {
             moveDir = glm::normalize(moveDir);
         }
 
-        const float speed = InputManager::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) ? 40.0f : 20.0f;
+        const float speed = InputManager::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) ? movementSpeed * 5.0f : movementSpeed;
         this->owner->transform->localPosition += moveDir * speed * deltaTime;
     }
 }

@@ -8,7 +8,7 @@
 #include <vector>
 #include "SceneObject.h"
 #include "../components/TransformComponent.h"
-#include "../BiBuild.h"
+#include "../helper_functions/helper.h"
 
 namespace BiBuild {
 
@@ -19,7 +19,8 @@ namespace BiBuild {
 
 
     public:
-        SceneManager(); std::vector<std::unique_ptr<SceneObject>> objects;
+        std::vector<std::unique_ptr<SceneObject>> objects;
+        SceneManager();
         SceneObject* cameraObject = nullptr;
         [[nodiscard]] SceneObject* GetRoot() const;
 

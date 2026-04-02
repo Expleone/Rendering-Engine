@@ -29,6 +29,7 @@ namespace BiBuild {
             double lastMouseX = 0.0;
             double lastMouseY = 0.0;
         } lookState;
+        float movementSpeed = 10.0f;
         float fov = 60;
         float nearPlane = 0.1f;
         float farPlane = 10000000.0f;
@@ -37,7 +38,7 @@ namespace BiBuild {
 
         CameraComponent(SceneObject* owner);
 
-        static glm::mat4 FastCameraInverse(const glm::mat4& worldMatrix);
+        glm::mat4 FastCameraInverse();
 
         glm::mat4 GetProjectionMat();
         glm::mat4 GetViewMat();

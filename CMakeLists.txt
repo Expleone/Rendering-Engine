@@ -86,13 +86,39 @@ add_executable(viewer main.cpp test_models/birds.c
         core/RenderSystem.cpp
         core/RenderSystem.h
         helper_functions/helper.h
-        )
+        core/ShaderProgram.cpp
+        core/ShaderProgram.h
+        core/VertexBuffer.cpp
+        core/VertexBuffer.h
+        core/VertexArray.cpp
+        core/VertexArray.h
+        core/IndexBuffer.cpp
+        core/IndexBuffer.h
+        core/UniformBuffer.cpp
+        core/UniformBuffer.h
+        core/MeshAnim.cpp
+        core/MeshAnim.h
+        components/MaterialComponent.cpp
+        components/MaterialComponent.h
+)
+
+add_executable(birds c.cpp test_models/birds.c
+        c.cpp)
 
 # Знаходимо системний OpenGL
 find_package(OpenGL REQUIRED)
 
 # Лінкуємо ВСЕ разом
 target_link_libraries(viewer PRIVATE
+        imgui_lib
+        glfw
+        glad          # Додано GLAD
+        glm::glm      # Додано GLM
+        OpenGL::GL
+        stduuid
+)
+
+target_link_libraries(birds PRIVATE
         imgui_lib
         glfw
         glad          # Додано GLAD

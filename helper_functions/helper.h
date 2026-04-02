@@ -7,32 +7,40 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
-namespace BiBuild {
-    namespace Helper {
+#include <uuid.h>
 
 
-        inline std::string read_file(const char* filename) {
+namespace BiBuild::Helper {
 
-            std::string file_contents;
-            std::ifstream file(filename);
 
-            if (file.is_open()) {
-                std::stringstream buffer;
-                buffer << file.rdbuf();      // Зчитуємо буфер файлу в потік
-                file_contents = buffer.str(); // Перетворюємо потік у рядок
-                file.close();
+    inline std::string read_file(const char* filename) {
 
-            } else {
-                std::cerr << "Error: couldn't open the file " << filename << std::endl;
-                return file_contents;
-            }
+        std::string file_contents;
+        std::ifstream file(filename);
 
-            std::cout << file_contents << std::endl;
+        if (file.is_open()) {
+            std::stringstream buffer;
+            buffer << file.rdbuf();      // Зчитуємо буфер файлу в потік
+            file_contents = buffer.str(); // Перетворюємо потік у рядок
+            file.close();
 
+        } else {
+            std::cerr << "Error: couldn't open the file " << filename << std::endl;
             return file_contents;
         }
+
+        std::cout << file_contents << std::endl;
+
+        return file_contents;
+    }
+
+    inline uuids::uuid genUUID() {
+        std::mt19937 engine{std::random_device{}()};
+        uuids::uuid_random_generator gen{engine};
+        uuids::uuid const id = gen();
+        return id;
     }
 }
+
 
 #endif //VIEWER_HELPER_H

@@ -20,7 +20,7 @@ namespace BiBuild {
     }
 
     SceneObject*  SceneManager::CreateObject(const std::string& name) {
-        auto uuid = genUUID();
+        auto uuid = Helper::genUUID();
         auto obj = std::make_unique<SceneObject>(uuid, name);
 
         SceneObject* ptr = obj.get();
