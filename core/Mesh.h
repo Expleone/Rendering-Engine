@@ -40,17 +40,17 @@ namespace BiBuild {
 
         Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices = {}, const std::string& name = "Mesh");
 
-        void Draw(glm::mat4& modelMat, ShaderProgram* shader) const {
+        void Draw(glm::mat4& modelMat, ShaderProgram* program) const {
             vao.Bind();
             if (isDirty) {
                 const_cast<Mesh*>(this)->UpdateGPUBuffers(); // Update GPU buffers if dirty
             }
             ebo.Bind();
             glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMat)));
-            shader->SetUniformMat4("model", modelMat);
-            // shader->SetUniformMat3("normalMatrix", normalMatrix);
+            program->SetUniformMat4("model", modelMat);
+            program->SetUniformMat3("normalMatrix", normalMatrix);
 
-            glDrawElements(GL_TRIANGLES, ebo.GetCount(), GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ebo.GetCount()), GL_UNSIGNED_INT, nullptr);
         }
 
         void UpdateVertices(const std::vector<Vertex>& newVertices) {

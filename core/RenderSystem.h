@@ -27,6 +27,19 @@ namespace BiBuild {
     class SceneObject;
     class MeshComponent;
 
+    struct LightData {
+        // relative to camera position + w component determines light type (0 for directional, 1 for point, 2 for spotlight)
+        glm::vec4 position;
+        glm::vec4 ambient; // + w component can be used for directional/spot light direction x
+        glm::vec4 diffuse; // + w component can be used for directional/spot light direction y
+        glm::vec4 specular; // + w component can be used for directional/spot light direction z
+        glm::vec4 attenuation; // x = constant, y = linear, z = quadratic, w = cutoff (for spotlights)
+    } ;
+
+    inline struct LightsUBOStructure {
+        LightData lights[100];
+        int numLights;
+    } lightData;
 
     class RenderSystem {
     private:
@@ -34,6 +47,7 @@ namespace BiBuild {
         // unsigned int defaultShaderProgram = 0;
         ShaderProgram* defaultShader = nullptr;
         UniformBuffer* matricesUBO = nullptr; // UBO for view and projection matrices
+        UniformBuffer* lightsUBO = nullptr; // UBO for lighting data
         ResourceManager* resourceManager = nullptr; // Reference to the resource manager for loading meshes and shaders
         CameraComponent* camera = nullptr;
 
@@ -56,6 +70,7 @@ namespace BiBuild {
         // Called once when the app starts
         void Initialize(GLFWwindow *window, int width, int height, SceneObject *cameraObject, ResourceManager *resourceMgr);
 
+        int RenderMeshObject(const SceneObject*obj);
 
         // Called every single frame
         void UpdateAndDraw(const std::vector<std::unique_ptr<SceneObject>>& sceneObjects, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);

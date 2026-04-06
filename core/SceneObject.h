@@ -32,7 +32,7 @@ namespace BiBuild {
         T* AddComponent();
 
         template <typename T>
-        T* GetComponent();
+        T* GetComponent() const;
 
         bool AddChild(SceneObject* child);
     };
@@ -46,7 +46,7 @@ namespace BiBuild {
     }
 
     template <typename T>
-    T* SceneObject::GetComponent() {
+    T* SceneObject::GetComponent() const {
         for (const auto& comp : components) {
             if (T* casted = dynamic_cast<T*>(comp.get())) {
                 return casted;

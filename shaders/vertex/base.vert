@@ -5,6 +5,7 @@ layout(location = 2) in vec2 aTexCoords;
 layout(location = 3) in vec3 aColor;
 
 out vec3 FragPos;
+out vec3 worldPos;
 out vec3 Normal;
 out vec2 TexCoords;
 out vec3 VertexColor;
@@ -18,13 +19,17 @@ layout (std140) uniform Matrices {
 };
 
 void main() {
-    vec4 worldPos = model * vec4(aPos, 1.0f);
-    FragPos = worldPos.xyz;
+    vec4 pos = model * vec4(aPos, 1.0f);
+    worldPos = pos.xyz;
 
-    Normal = normalize(normalMatrix * aNormal);
+    // FIX 1: Keep FragPos in World Space! Do not multiply by 'view' here.
+    FragPos = pos.xyz;
+
+    Normal = normalize(normalMatrix * aNormal); // This is correctly in World Space
 
     TexCoords = aTexCoords;
     VertexColor = aColor;
 
-    gl_Position = projection * view * worldPos;
+    // Apply the view matrix here instead
+    gl_Position = projection * view * pos;
 }

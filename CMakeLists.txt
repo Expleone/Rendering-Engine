@@ -100,6 +100,8 @@ add_executable(viewer main.cpp test_models/birds.c
         core/MeshAnim.h
         components/MaterialComponent.cpp
         components/MaterialComponent.h
+        test_models/cube.cpp
+        test_models/cube.h
 )
 
 add_executable(birds c.cpp test_models/birds.c

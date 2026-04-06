@@ -4,6 +4,7 @@
 
 #ifndef VIEWER_UNIFORMBUFFER_H
 #define VIEWER_UNIFORMBUFFER_H
+#include <iostream>
 #include <glad/glad.h>
 namespace BiBuild {
 
@@ -16,11 +17,9 @@ namespace BiBuild {
             glGenBuffers(1, &ID);
             glBindBuffer(GL_UNIFORM_BUFFER, ID);
 
-            // Allocate memory (GL_DYNAMIC_DRAW since UBOs update often)
             glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-            // Link this buffer to the specific binding slot
             glBindBufferRange(GL_UNIFORM_BUFFER, bindingPoint, ID, 0, size);
         }
 
@@ -37,6 +36,7 @@ namespace BiBuild {
 
         // Update a specific chunk of the buffer (useful for arrays of data)
         void UpdateSubData(const void* data, GLsizeiptr size, GLintptr offset) {
+            // std::cout << "Updating UBO at offset " << offset << " with size " << size << std::endl;
             glBindBuffer(GL_UNIFORM_BUFFER, ID);
             glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
             glBindBuffer(GL_UNIFORM_BUFFER, 0);

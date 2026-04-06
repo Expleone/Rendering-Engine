@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <glad/glad.h>
+#include <unordered_map>
 
 #include "../helper_functions/helper.h"
 #include <glm/glm.hpp>
@@ -15,7 +16,8 @@
 
 namespace BiBuild {
     enum class UBOBinding : GLuint {
-        Matrices = 0
+        Matrices = 0,
+        Lights = 1
     };
     enum class AttributeLocation : GLuint {
         Position = 0,
@@ -26,6 +28,7 @@ namespace BiBuild {
 
     class ShaderProgram {
         GLuint programID = 0;
+        mutable std::unordered_map<std::string, GLuint> locations;
     public:
         ShaderProgram(std::string fragmentShaderPath, std::string vertexShaderPath) {
 
@@ -35,6 +38,7 @@ namespace BiBuild {
                                   fragmentSource.c_str());
             GLuint blockIndex = glGetUniformBlockIndex(programID, "Matrices");
             glUniformBlockBinding(programID, blockIndex, static_cast<GLuint>(UBOBinding::Matrices));
+            glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "Lights"), static_cast<GLuint>(UBOBinding::Lights));
         }
 
         void Use() const {
@@ -45,7 +49,7 @@ namespace BiBuild {
             glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
         }
 
-        void SetUniformVec3(const char* name, glm::vec3& vector) const {
+        void SetUniformVec3(const char* name, const glm::vec3& vector) const {
             glUniform3fv(GetUniformLocation(name), 1, glm::value_ptr(vector));
         }
 
@@ -62,10 +66,18 @@ namespace BiBuild {
         }
 
         GLint GetUniformLocation(const char* name) const {
+            std::string nameStr(name);
+            if (locations.find(nameStr) != locations.end()) {
+                return locations.at(nameStr);
+            }
             GLint location = glGetUniformLocation(programID, name);
+            locations.emplace(nameStr, static_cast<GLuint>(location));
             if (location == -1) {
                 std::cerr << "Warning: Uniform '" << name << "' not found in shader program." << std::endl;
+            }else {
+                std::cout << "Uniform '" << name << "' location: " << location << std::endl;
             }
+
             return location;
         }
 

@@ -16,10 +16,12 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "BiBuild.h"
+#include "components/LightComponent.h"
 #include "components/MaterialComponent.h"
 #include "core/RenderSystem.h"
 #include "core/ResourceManager.h"
 #include "test_models/birds.h"
+#include "./test_models/cube.h"
 
 const int WIN_WIDTH  = 800;
 const int WIN_HEIGHT = 600;
@@ -69,23 +71,36 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    auto obj = scene.CreateObject("bird");
-    auto* mesh = obj->GetComponent<BiBuild::MeshComponent>();
-    if (!mesh) {
-        mesh = obj->AddComponent<BiBuild::MeshComponent>();
-    }
-    mesh->mesh = resourceManager.LoadMesh("bird_mesh", birds_data.vertices, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
+    auto* bird_mesh = resourceManager.LoadMesh("bird_mesh", birds_data.vertices, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
+
+    // auto obj = scene.CreateObject("bird");
+    // auto* mesh = obj->GetComponent<BiBuild::MeshComponent>();
+    // if (!mesh) {
+    //     mesh = obj->AddComponent<BiBuild::MeshComponent>();
+    // }
+    // mesh->mesh = bird_mesh;
+    // auto* material = obj->GetComponent<BiBuild::MaterialComponent>();
+    // if (!material) {
+    //     material = obj->AddComponent<BiBuild::MaterialComponent>();
+    // }
+    // // 2. Set up a "Shiny Copper" Material
+    // material->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
+    // material->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
+    // material->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    // material->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    // material->shininess = 64.0f;
+
     auto obj2 = scene.CreateObject("bird2");
     auto* mesh2 = obj2->GetComponent<BiBuild::MeshComponent>();
     if (!mesh2) {
         mesh2 = obj2->AddComponent<BiBuild::MeshComponent>();
     }
-    mesh2->mesh = mesh->mesh;
-    auto* material = obj->GetComponent<BiBuild::MaterialComponent>();
-    if (!material) {
-        material = obj->AddComponent<BiBuild::MaterialComponent>();
+    mesh2->mesh = bird_mesh;
+    auto* material2 = obj2->GetComponent<BiBuild::MaterialComponent>();
+    if (!material2) {
+        material2 = obj2->AddComponent<BiBuild::MaterialComponent>();
     }
-    material->shader = resourceManager.LoadShaderProgram("bird_shader", "../shaders/vertex/base.vert", "../shaders/fragment/test.frag");
+    material2->shader = resourceManager.LoadShaderProgram("bird_shader", "../shaders/vertex/base.vert", "../shaders/fragment/test.frag");
     obj2->transform->localPosition = glm::vec3(1000.0f, 0.0f, 00.0f);
 
     auto* camera = scene.cameraObject ? scene.cameraObject->GetComponent<BiBuild::CameraComponent>() : nullptr;
@@ -98,7 +113,61 @@ int main() {
         glfwTerminate();
         return -1;
     }
-    scene.cameraObject->transform->localPosition = glm::vec3(0.0f, 150.0f, 800.0f);
+    scene.cameraObject->transform->localPosition = glm::vec3(0.0f, 00.0f, 10.0f);
+
+
+
+
+
+
+    // 2. Load the mesh
+    auto cube = scene.CreateObject("Cube");
+    auto* cubeMesh = cube->AddComponent<BiBuild::MeshComponent>();
+
+    cubeMesh->mesh = resourceManager.LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    auto* cubeMaterial = cube->GetComponent<BiBuild::MaterialComponent>();
+    if (!cubeMaterial) {
+        cubeMaterial = cube->AddComponent<BiBuild::MaterialComponent>();
+    }
+    // 2. Set up a "Shiny Copper" Material
+    cubeMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
+    cubeMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
+    cubeMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    cubeMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    cubeMaterial->shininess = 64.0f;
+
+
+    // auto sunObj = scene.CreateObject("SunLight");
+    // auto* sunLight = sunObj->AddComponent<BiBuild::LightComponent>();
+    //
+    // sunLight->type      = BiBuild::LightType::Directional;
+    // sunLight->direction = glm::vec3(-0.5f, -1.0f, -0.5f); // Angled diagonally down
+    // sunLight->ambient   = glm::vec3(0.1f, 0.1f, 0.15f);   // Slight blueish tint to global shadows
+    // sunLight->diffuse   = glm::vec3(0.9f, 0.85f, 0.8f);   // Warm daytime sunlight
+    // sunLight->specular  = glm::vec3(1.0f, 1.0f, 1.0f);
+    // sunLight->intensity = 1.0f;
+
+
+    auto pointObj = scene.CreateObject("BlueRimLight");
+    auto* pointMesh = pointObj->AddComponent<BiBuild::MeshComponent>();
+    pointMesh->mesh = resourceManager.LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    auto* pointMaterial = pointObj->GetComponent<BiBuild::MaterialComponent>();
+    if (!pointMaterial) {
+        pointMaterial = pointObj->AddComponent<BiBuild::MaterialComponent>();
+    }
+    pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
+    pointMaterial->diffuse   = glm::vec3(0.0f); //
+    pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
+    pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
+    auto* pointLight = pointObj->AddComponent<BiBuild::LightComponent>();
+    pointLight->type        = BiBuild::LightType::Point;
+    pointLight->ambient     = glm::vec3(0.0f);
+    pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);  // Bright teal/cyan to contrast the orange bird
+    pointLight->specular    = glm::vec3(0.5f, 0.8f, 1.0f);
+    pointLight->attenuation = glm::vec3(1.0f, 0.09f, 0.032f); // Fades out nicely
+    pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
+    pointObj->transform->localPosition = glm::vec3(0.0f, 00.0f, 00.0f); // Positioned above and behind the camera for rim lighting
+    pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
     // CameraControlState cameraLookState;
     float lastFrameTime = static_cast<float>(glfwGetTime());
@@ -136,7 +205,9 @@ int main() {
         ImGui::Begin("Controls");
         ImGui::SliderFloat("Zoom", &camera->fov, 1.0f, 180.0f);
         ImGui::SliderFloat("Speed", &camera->movementSpeed, 1.0f, 500.0f);
-        // ImGui::SliderFloat("bird", &obj2->transform->localPosition.x, 1, 110000.0f);
+        ImGui::SliderFloat("lightX", &pointObj->transform->localPosition.x, -20, 20.0f);
+        ImGui::SliderFloat("lightY", &pointObj->transform->localPosition.y, -20, 20.0f);
+        ImGui::SliderFloat("lightZ", &pointObj->transform->localPosition.z, -20, 20.0f);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::Text("Draw calls per frame: %d; Objects on the scene: %d", renderSystem.drawCallsLastFrame, renderSystem.objectsOnScreenLastFrame);
         ImGui::End();
