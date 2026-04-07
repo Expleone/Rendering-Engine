@@ -24,7 +24,7 @@ namespace BiBuild {
         auto obj = std::make_unique<SceneObject>(uuid, name);
 
         SceneObject* ptr = obj.get();
-        objects.push_back(std::move(obj));
+        objects.push_back(std::move(obj));///Crushes here sometimes
 
         // Automatically parent to root, unless this IS the root
         if (rootObject != nullptr) {
@@ -43,17 +43,13 @@ namespace BiBuild {
     void SceneManager::UpdateTransformHierarchy(TransformComponent* transform, const glm::mat4& parentWorldMatrix) {
         glm::mat4 effectiveParentMatrix = parentWorldMatrix;
 
-        // The Fix: Strip scaling from the parent's matrix if the flag is false
         if (!transform->inheritScale) {
-            // Extract and normalize the X, Y, and Z axis vectors
             glm::vec3 right = glm::normalize(glm::vec3(parentWorldMatrix[0]));
             glm::vec3 up    = glm::normalize(glm::vec3(parentWorldMatrix[1]));
             glm::vec3 fwd   = glm::normalize(glm::vec3(parentWorldMatrix[2]));
 
-            // Extract the translation (position remains unaffected)
             glm::vec3 pos   = glm::vec3(parentWorldMatrix[3]);
 
-            // Rebuild a pure rotation/translation matrix
             effectiveParentMatrix = glm::mat4(
                 glm::vec4(right, 0.0f),
                 glm::vec4(up,    0.0f),
@@ -62,10 +58,8 @@ namespace BiBuild {
             );
         }
 
-        // Calculate final world matrix
         transform->worldMatrix = effectiveParentMatrix * transform->GetLocalMatrix();
 
-        // Recursively update all children
         for (SceneObject* child : transform->children) {
             if (TransformComponent* childTransform = child->GetComponent<TransformComponent>()) {
                 UpdateTransformHierarchy(childTransform, transform->worldMatrix);

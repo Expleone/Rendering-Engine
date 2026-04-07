@@ -57,6 +57,7 @@ int main() {
     BiBuild::SceneManager scene = BiBuild::SceneManager();
     BiBuild::ResourceManager resourceManager;
     BiBuild::RenderSystem renderSystem;
+    resourceManager.SetScene(&scene);
 
 
     renderSystem.Initialize(window, WIN_WIDTH,WIN_HEIGHT,scene.cameraObject, &resourceManager);
@@ -121,31 +122,31 @@ int main() {
 
 
     // 2. Load the mesh
-    auto cube = scene.CreateObject("Cube");
-    auto* cubeMesh = cube->AddComponent<BiBuild::MeshComponent>();
-
-    cubeMesh->mesh = resourceManager.LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
-    auto* cubeMaterial = cube->GetComponent<BiBuild::MaterialComponent>();
-    if (!cubeMaterial) {
-        cubeMaterial = cube->AddComponent<BiBuild::MaterialComponent>();
-    }
-    // 2. Set up a "Shiny Copper" Material
-    cubeMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
-    cubeMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
-    cubeMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
-    cubeMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
-    cubeMaterial->shininess = 64.0f;
-
-
-    // auto sunObj = scene.CreateObject("SunLight");
-    // auto* sunLight = sunObj->AddComponent<BiBuild::LightComponent>();
+    // auto cube = scene.CreateObject("Cube");
+    // auto* cubeMesh = cube->AddComponent<BiBuild::MeshComponent>();
     //
-    // sunLight->type      = BiBuild::LightType::Directional;
-    // sunLight->direction = glm::vec3(-0.5f, -1.0f, -0.5f); // Angled diagonally down
-    // sunLight->ambient   = glm::vec3(0.1f, 0.1f, 0.15f);   // Slight blueish tint to global shadows
-    // sunLight->diffuse   = glm::vec3(0.9f, 0.85f, 0.8f);   // Warm daytime sunlight
-    // sunLight->specular  = glm::vec3(1.0f, 1.0f, 1.0f);
-    // sunLight->intensity = 1.0f;
+    // cubeMesh->mesh = resourceManager.LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    // auto* cubeMaterial = cube->GetComponent<BiBuild::MaterialComponent>();
+    // if (!cubeMaterial) {
+    //     cubeMaterial = cube->AddComponent<BiBuild::MaterialComponent>();
+    // }
+    // // 2. Set up a "Shiny Copper" Material
+    // cubeMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
+    // cubeMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
+    // cubeMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    // cubeMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    // cubeMaterial->shininess = 64.0f;
+
+
+    auto sunObj = scene.CreateObject("SunLight");
+    auto* sunLight = sunObj->AddComponent<BiBuild::LightComponent>();
+
+    sunLight->type      = BiBuild::LightType::Directional;
+    sunLight->direction = glm::vec3(-0.5f, -1.0f, -0.5f); // Angled diagonally down
+    sunLight->ambient   = glm::vec3(0.1f, 0.1f, 0.15f);   // Slight blueish tint to global shadows
+    sunLight->diffuse   = glm::vec3(0.9f, 0.85f, 0.8f);   // Warm daytime sunlight
+    sunLight->specular  = glm::vec3(1.0f, 1.0f, 1.0f);
+    sunLight->intensity = 1.0f;
 
 
     auto pointObj = scene.CreateObject("BlueRimLight");
@@ -164,11 +165,27 @@ int main() {
     pointLight->ambient     = glm::vec3(0.0f);
     pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);  // Bright teal/cyan to contrast the orange bird
     pointLight->specular    = glm::vec3(0.5f, 0.8f, 1.0f);
-    pointLight->attenuation = glm::vec3(1.0f, 0.09f, 0.032f); // Fades out nicely
-    pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
-    pointObj->transform->localPosition = glm::vec3(0.0f, 00.0f, 00.0f); // Positioned above and behind the camera for rim lighting
+    pointLight->attenuation = glm::vec3(1.0f, 0.0014f, 0.000007f); // Fades out nicely
+    // pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
+    pointObj->transform->localPosition = glm::vec3(0.0f, 1000.0f, 00.0f); // Positioned above and behind the camera for rim lighting
     pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
+    auto dragon = scene.CreateObject("dragon");
+    auto* dragonMesh = dragon->AddComponent<BiBuild::MeshComponent>();
+
+    dragonMesh->mesh = resourceManager.GetMesh("../test_models/Dragon_80K.obj");
+    auto* dragonMaterial = dragon->GetComponent<BiBuild::MaterialComponent>();
+    if (!dragonMaterial) {
+        dragonMaterial = dragon->AddComponent<BiBuild::MaterialComponent>();
+    }
+    // 2. Set up a "Shiny Copper" Material
+    dragonMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
+    dragonMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
+    dragonMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    dragonMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    dragonMaterial->shininess = 10.0f;
+    dragon->transform->localScale = glm::vec3(100);
+    // pointMesh->mesh = resourceManager.GetMesh("../test_models/Dragon_80K.obj");
     // CameraControlState cameraLookState;
     float lastFrameTime = static_cast<float>(glfwGetTime());
     int framen = 0;

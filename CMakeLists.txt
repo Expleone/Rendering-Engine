@@ -48,6 +48,21 @@ FetchContent_Declare(
 
 # Make the library available to the build
 FetchContent_MakeAvailable(stduuid)
+
+FetchContent_Declare(
+        assimp
+        GIT_REPOSITORY https://github.com/assimp/assimp.git
+        GIT_TAG v5.4.3 # Вкажіть потрібну версію або хеш
+)
+
+# Вимкнення зайвих функцій для прискорення збірки
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(assimp)
+
 # Створення бібліотеки ImGui
 add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/imgui.cpp
@@ -104,8 +119,8 @@ add_executable(viewer main.cpp test_models/birds.c
         test_models/cube.h
 )
 
-add_executable(birds c.cpp test_models/birds.c
-        c.cpp)
+#add_executable(birds c.cpp test_models/birds.c
+#        c.cpp)
 
 # Знаходимо системний OpenGL
 find_package(OpenGL REQUIRED)
@@ -118,13 +133,15 @@ target_link_libraries(viewer PRIVATE
         glm::glm      # Додано GLM
         OpenGL::GL
         stduuid
+        assimp
 )
 
-target_link_libraries(birds PRIVATE
-        imgui_lib
-        glfw
-        glad          # Додано GLAD
-        glm::glm      # Додано GLM
-        OpenGL::GL
-        stduuid
-)
+#target_link_libraries(birds PRIVATE
+#        imgui_lib
+#        glfw
+#        glad          # Додано GLAD
+#        glm::glm      # Додано GLM
+#        OpenGL::GL
+#        stduuid
+#
+#)

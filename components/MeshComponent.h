@@ -26,21 +26,9 @@ namespace BiBuild {
     class MeshComponent : public Component {
     public:
         Mesh* mesh = nullptr;
+        std::string meshName;
         MeshComponent(SceneObject* owner) : Component(owner){}
-        // unsigned int VAO = 0;
-        // unsigned int VBO = 0;
-        // unsigned int EBO = 0;
-        // bool isDirty = true;
-        // std::vector<Vertex> vertices;
-        // std::vector<unsigned int> indices;
-        // std::string topology = "Triangles";
-        // MeshComponent(SceneObject* owner) : Component(owner), vertices() {}
-        // ~MeshComponent() override {
-        //     // Must clean up GPU memory when the component is destroyed
-        //     glDeleteVertexArrays(1, &VAO);
-        //     glDeleteBuffers(1, &VBO);
-        //     glDeleteBuffers(1, &EBO);
-        // }
+
     };
 }
 
