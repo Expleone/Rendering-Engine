@@ -72,10 +72,15 @@ add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-        components/Component.cpp
-        components/Component.h
 )
 target_include_directories(imgui_lib PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+
+FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG        master
+)
+FetchContent_MakeAvailable(stb)
 
 # --- Основний проект ---
 add_executable(viewer main.cpp test_models/birds.c
@@ -86,8 +91,8 @@ add_executable(viewer main.cpp test_models/birds.c
         core/SceneManager.h
         core/SceneObject.cpp
         core/SceneObject.h
-        components/MeshComponent.cpp
-        components/MeshComponent.h
+        components/ModelComponent.cpp
+        components/ModelComponent.h
         components/LightComponent.cpp
         components/LightComponent.h
         components/TransformComponent.cpp
@@ -113,10 +118,14 @@ add_executable(viewer main.cpp test_models/birds.c
         core/UniformBuffer.h
         core/MeshAnim.cpp
         core/MeshAnim.h
-        components/MaterialComponent.cpp
-        components/MaterialComponent.h
         test_models/cube.cpp
         test_models/cube.h
+        core/Texture.cpp
+        core/Texture.h
+        core/Material.cpp
+        core/Material.h
+        core/stb_image.cpp
+        core/stb_image.cpp
 )
 
 #add_executable(birds c.cpp test_models/birds.c
@@ -135,6 +144,8 @@ target_link_libraries(viewer PRIVATE
         stduuid
         assimp
 )
+
+target_include_directories(viewer PRIVATE ${stb_SOURCE_DIR})
 
 #target_link_libraries(birds PRIVATE
 #        imgui_lib

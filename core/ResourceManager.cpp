@@ -4,12 +4,29 @@
 
 #include "ResourceManager.h"
 
-#include "../components/MeshComponent.h"
+#include "../components/ModelComponent.h"
 
 namespace BiBuild {
+
+    Texture *ResourceManager::GetTexture(const std::string &path) {
+        auto it = Get().textures.find(path);
+        if (it != Get().textures.end()) {
+            return it->second.get();
+        }
+        return LoadTexture(path);
+    }
+
+    Texture *ResourceManager::LoadTexture(const std::string &path) {
+        auto texture = std::make_unique<Texture>(path,0);
+        auto* texPtr = texture.get();
+        Get().textures.emplace(path, std::move(texture));
+        return texPtr;
+    }
+
+
     Mesh* ResourceManager::LoadMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) {
-        auto it = meshes.find(name);
-        if (it != meshes.end()) {
+        auto it = Get().meshes.find(name);
+        if (it != Get().meshes.end()) {
             it->second->UpdateVertices(vertices);
             it->second->UpdateIndices(indices);
             return it->second.get();
@@ -17,7 +34,7 @@ namespace BiBuild {
 
         auto mesh = std::make_unique<Mesh>(vertices, indices, name);
         Mesh* ptr = mesh.get();
-        meshes.emplace(name, std::move(mesh));
+        Get().meshes.emplace(name, std::move(mesh));
 
         return ptr;
     }
@@ -122,9 +139,9 @@ namespace BiBuild {
         return LoadMesh(name, vertexData, indexData);
     }
 
-    Mesh *ResourceManager::GetMesh(const std::string &name) const {
-        auto it = meshes.find(name + ":0");
-        if (it != meshes.end()) {
+    Mesh* ResourceManager::GetMesh(const std::string &name){
+        auto it = Get().meshes.find(name + ":0");
+        if (it != Get().meshes.end()) {
             return it->second.get();
         }
         auto newMeshes = LoadMeshesFromFile(name);
@@ -132,9 +149,9 @@ namespace BiBuild {
         return nullptr;
     }
 
-    Mesh *ResourceManager::GetMesh(const std::string &name, int idx) const {
-        auto it = meshes.find(name + ":" + std::to_string(idx));
-        if (it != meshes.end()) {
+    Mesh *ResourceManager::GetMesh(const std::string &name, int idx) {
+        auto it = Get().meshes.find(name + ":" + std::to_string(idx));
+        if (it != Get().meshes.end()) {
             return it->second.get();
         }
         auto newMeshes = LoadMeshesFromFile(name);
@@ -143,7 +160,7 @@ namespace BiBuild {
     }
 
 
-    std::vector<Mesh*> ResourceManager::LoadMeshesFromFile(const std::string &filepath) const {
+    std::vector<Mesh*> ResourceManager::LoadMeshesFromFile(const std::string &filepath) {
 
         const struct aiScene* ai_scene = aiImportFile( filepath.c_str(),
             aiProcess_CalcTangentSpace       |
@@ -156,7 +173,7 @@ namespace BiBuild {
             std::cerr << "Error loading the file: " << filepath << std::endl;
             return {};
         }
-        auto newMeshes = processAssimpScene(ai_scene, filepath);
+        auto newMeshes = Get().processAssimpScene(ai_scene, filepath);
 
         // We're done. Release all resources associated with this import
         aiReleaseImport(ai_scene);
@@ -164,35 +181,52 @@ namespace BiBuild {
     }
 
     ShaderProgram* ResourceManager::LoadShaderProgram(const std::string& name, const std::string& vertexFilepath, const std::string& fragmentFilepath) {
-        auto it = shaderPrograms.find(name);
-        if (it != shaderPrograms.end()) {
+        auto it = Get().shaderPrograms.find(name);
+        if (it != Get().shaderPrograms.end()) {
             return it->second.get();
         }
 
         auto shader = std::make_unique<ShaderProgram>(fragmentFilepath, vertexFilepath);
         ShaderProgram* ptr = shader.get();
-        shaderPrograms.emplace(name, std::move(shader));
+        Get().shaderPrograms.emplace(name, std::move(shader));
 
         return ptr;
     }
 
-    ShaderProgram *ResourceManager::GetShaderProgram(const std::string &name) const {
-        auto it = shaderPrograms.find(name);
-        if (it != shaderPrograms.end()) {
+    ShaderProgram *ResourceManager::GetShaderProgram(const std::string &name){
+        auto it = Get().shaderPrograms.find(name);
+        if (it != Get().shaderPrograms.end()) {
             return it->second.get();
         }
         return nullptr;
     }
 
 
-    std::vector<Mesh *> ResourceManager::processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath) const{
+    Material *ResourceManager::CreateMaterial(const std::string &name) {
+        auto it = Get().materials.find(name);
+        if (it != Get().materials.end()) {
+            return it->second.get();
+        }
+
+        auto mat = std::make_unique<Material>();
+        auto* ptr = mat.get();
+        Get().materials.emplace(name, std::move(mat));
+        return ptr;
+    }
+
+    Material *ResourceManager::GetMaterial(const std::string &name) {
+        auto it = Get().materials.find(name);
+        if (it != Get().materials.end()) {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+
+    std::vector<Mesh *> ResourceManager::processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath){
         if (!ai_scene->HasMeshes()) return {};
         std::vector<Mesh*> newMeshes;
         for (int i = 0; i < ai_scene->mNumMeshes; i ++) {
             std::string obj_name = filepath + ":" + std::to_string(i);
-            // auto* obj = scene->CreateObject(obj_name);
-            // auto* mesh_comp = obj->AddComponent<MeshComponent>();
-            // mesh_comp->meshName = obj_name;
 
             auto* ai_mesh = ai_scene->mMeshes[i];
             std::vector<Vertex> vertices;

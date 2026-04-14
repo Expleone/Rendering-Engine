@@ -17,7 +17,6 @@
 #include "imgui_impl_opengl3.h"
 #include "BiBuild.h"
 #include "components/LightComponent.h"
-#include "components/MaterialComponent.h"
 #include "core/RenderSystem.h"
 #include "core/ResourceManager.h"
 #include "test_models/birds.h"
@@ -55,12 +54,9 @@ int main() {
     }
 
     BiBuild::SceneManager scene = BiBuild::SceneManager();
-    BiBuild::ResourceManager resourceManager;
-    BiBuild::RenderSystem renderSystem;
-    resourceManager.SetScene(&scene);
 
 
-    renderSystem.Initialize(window, WIN_WIDTH,WIN_HEIGHT,scene.cameraObject, &resourceManager);
+    BiBuild::RenderSystem::Initialize(window, WIN_WIDTH,WIN_HEIGHT, scene.cameraObject);
     // Callbacks setup
     BiBuild::InputManager::Init(window);
 
@@ -72,7 +68,7 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    auto* bird_mesh = resourceManager.LoadMesh("bird_mesh", birds_data.vertices, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
+    auto* bird_mesh = BiBuild::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
 
     // auto obj = scene.CreateObject("bird");
     // auto* mesh = obj->GetComponent<BiBuild::MeshComponent>();
@@ -92,16 +88,14 @@ int main() {
     // material->shininess = 64.0f;
 
     auto obj2 = scene.CreateObject("bird2");
-    auto* mesh2 = obj2->GetComponent<BiBuild::MeshComponent>();
+    auto* mesh2 = obj2->GetComponent<BiBuild::ModelComponent>();
     if (!mesh2) {
-        mesh2 = obj2->AddComponent<BiBuild::MeshComponent>();
+        mesh2 = obj2->AddComponent<BiBuild::ModelComponent>();
     }
     mesh2->mesh = bird_mesh;
-    auto* material2 = obj2->GetComponent<BiBuild::MaterialComponent>();
-    if (!material2) {
-        material2 = obj2->AddComponent<BiBuild::MaterialComponent>();
-    }
-    material2->shader = resourceManager.LoadShaderProgram("bird_shader", "../shaders/vertex/base.vert", "../shaders/fragment/test.frag");
+    auto* material2 = BiBuild::ResourceManager::CreateMaterial("mat2");
+    material2->shader = BiBuild::ResourceManager::LoadShaderProgram("bird_shader", "../shaders/vertex/base.vert", "../shaders/fragment/test.frag");
+    mesh2->mat = material2;
     obj2->transform->localPosition = glm::vec3(1000.0f, 0.0f, 00.0f);
 
     auto* camera = scene.cameraObject ? scene.cameraObject->GetComponent<BiBuild::CameraComponent>() : nullptr;
@@ -150,16 +144,14 @@ int main() {
 
 
     auto pointObj = scene.CreateObject("BlueRimLight");
-    auto* pointMesh = pointObj->AddComponent<BiBuild::MeshComponent>();
-    pointMesh->mesh = resourceManager.LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
-    auto* pointMaterial = pointObj->GetComponent<BiBuild::MaterialComponent>();
-    if (!pointMaterial) {
-        pointMaterial = pointObj->AddComponent<BiBuild::MaterialComponent>();
-    }
+    auto* pointModel = pointObj->AddComponent<BiBuild::ModelComponent>();
+    pointModel->mesh = BiBuild::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    auto* pointMaterial = BiBuild::ResourceManager::CreateMaterial("point");
     pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
     pointMaterial->diffuse   = glm::vec3(0.0f); //
     pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
     pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
+    pointModel->mat = pointMaterial;
     auto* pointLight = pointObj->AddComponent<BiBuild::LightComponent>();
     pointLight->type        = BiBuild::LightType::Point;
     pointLight->ambient     = glm::vec3(0.0f);
@@ -171,19 +163,18 @@ int main() {
     pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
     auto dragon = scene.CreateObject("dragon");
-    auto* dragonMesh = dragon->AddComponent<BiBuild::MeshComponent>();
+    auto* dragonModel = dragon->AddComponent<BiBuild::ModelComponent>();
 
-    dragonMesh->mesh = resourceManager.GetMesh("../test_models/Dragon_80K.obj");
-    auto* dragonMaterial = dragon->GetComponent<BiBuild::MaterialComponent>();
-    if (!dragonMaterial) {
-        dragonMaterial = dragon->AddComponent<BiBuild::MaterialComponent>();
-    }
+    dragonModel->mesh = BiBuild::ResourceManager::GetMesh("../test_models/Dragon_80K.obj");
+    auto* dragonMaterial = BiBuild::ResourceManager::CreateMaterial("copper");
+    dragonModel->mat = dragonMaterial;
     // 2. Set up a "Shiny Copper" Material
     dragonMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
     dragonMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
     dragonMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
     dragonMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
     dragonMaterial->shininess = 10.0f;
+
     dragon->transform->localScale = glm::vec3(100);
     // pointMesh->mesh = resourceManager.GetMesh("../test_models/Dragon_80K.obj");
     // CameraControlState cameraLookState;
@@ -206,9 +197,9 @@ int main() {
             framen = 0;
         }
 
-        resourceManager.LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
+        BiBuild::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
 
-        renderSystem.UpdateAndDraw(
+        BiBuild::RenderSystem::UpdateAndDraw(
             scene.objects,
             camera->BuildCameraViewMatrix(),
             camera->GetProjectionMat()
@@ -226,7 +217,7 @@ int main() {
         ImGui::SliderFloat("lightY", &pointObj->transform->localPosition.y, -20, 20.0f);
         ImGui::SliderFloat("lightZ", &pointObj->transform->localPosition.z, -20, 20.0f);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::Text("Draw calls per frame: %d; Objects on the scene: %d", renderSystem.drawCallsLastFrame, renderSystem.objectsOnScreenLastFrame);
+        // ImGui::Text("Draw calls per frame: %d; Objects on the scene: %d", BiBuild::RenderSystem::drawCallsLastFrame, renderSystem.objectsOnScreenLastFrame);
         ImGui::End();
 
         ImGui::Begin("Scene Objects");
@@ -235,7 +226,7 @@ int main() {
             if (scene.objects[i]) {
                 // Push an ID so ImGui doesn't get confused if two objects have the same name
                 ImGui::PushID(i);
-                if (scene.objects[i]->GetComponent<BiBuild::MeshComponent>()) {
+                if (scene.objects[i]->GetComponent<BiBuild::ModelComponent>()) {
                     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255)); // Highlight selected object in yellow
                 }
                 // Selectable returns true if it was clicked this frame
@@ -243,7 +234,7 @@ int main() {
                     // Handle selection logic here later
                     // e.g., selectedObjectIndex = i;
                 }
-                if (scene.objects[i]->GetComponent<BiBuild::MeshComponent>()) {
+                if (scene.objects[i]->GetComponent<BiBuild::ModelComponent>()) {
                     ImGui::PopStyleColor();
                 }
                 ImGui::PopID();

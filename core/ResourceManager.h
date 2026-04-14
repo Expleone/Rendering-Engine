@@ -12,44 +12,59 @@
 #include <assimp/scene.h>          // Output data structure
 #include <assimp/postprocess.h>
 
+#include "Material.h"
 #include "ShaderProgram.h"
 #include "Mesh.h"
 #include "SceneManager.h"
+#include "Texture.h"
 
 
 namespace BiBuild {
     struct Vertex;
 
     class ResourceManager {
-        mutable std::unordered_map<std::string, std::unique_ptr<Mesh>> meshes;
-        mutable std::unordered_map<std::string, std::unique_ptr<ShaderProgram>> shaderPrograms;
-        SceneManager* scene = nullptr;
+        std::unordered_map<std::string, std::unique_ptr<Mesh>> meshes{};
+        std::unordered_map<std::string, std::unique_ptr<ShaderProgram>> shaderPrograms{};
+        std::unordered_map<std::string, std::unique_ptr<Texture>> textures{};
+        std::unordered_map<std::string, std::unique_ptr<Material>> materials{};
 
-        std::vector<Mesh *> processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath) const;
 
-    public:
         ResourceManager() = default;
+        ~ResourceManager() = default;
 
-        Mesh* LoadMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
-        Mesh* LoadMesh(const std::string& name, const std::vector<float>& vertices, const std::vector<unsigned int>& indices); // Overload for simple models that use only positions
-        Mesh* LoadMesh(const std::string& name, const std::vector<float>& vertices, const std::vector<float>& normals, const std::vector<unsigned int>& indices);
-        Mesh* LoadMesh(const std::string& name, const float* vertices, const float* normals, const unsigned int vSize, const unsigned short* indices, const unsigned int iSize, const glm::vec3& color);
-        Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize);
-        Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize, const glm::vec3& color);
-        Mesh* LoadMesh(const std::string& name, const std::string& filepath);
-        Mesh* GetMesh(const std::string& filepath) const;
-
-        Mesh *GetMesh(const std::string &name, int idx) const;
-
-        std::vector<Mesh *> LoadMeshesFromFile(const std::string &filepath) const;
-
-        ShaderProgram* LoadShaderProgram(const std::string& name, const std::string& vertexFilepath, const std::string& fragmentFilepath);
-        ShaderProgram* GetShaderProgram(const std::string& name) const;
-
-        void SetScene(SceneManager* scene) {
-            ResourceManager::scene = scene;
+        static ResourceManager& Get() {
+            static ResourceManager instance;
+            return instance;
         }
 
+
+        std::vector<Mesh*> processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath);
+
+    public:
+        ResourceManager(const ResourceManager&) = delete;
+        ResourceManager& operator=(const ResourceManager&) = delete;
+
+        static Mesh* LoadMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
+        static Mesh* LoadMesh(const std::string& name, const std::vector<float>& vertices, const std::vector<unsigned int>& indices); // Overload for simple models that use only positions
+        static Mesh* LoadMesh(const std::string& name, const std::vector<float>& vertices, const std::vector<float>& normals, const std::vector<unsigned int>& indices);
+        static Mesh* LoadMesh(const std::string& name, const float* vertices, const float* normals, const unsigned int vSize, const unsigned short* indices, const unsigned int iSize, const glm::vec3& color);
+        static Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize);
+        static Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize, const glm::vec3& color);
+        static Mesh* LoadMesh(const std::string& name, const std::string& filepath);
+        static Mesh* GetMesh(const std::string& filepath);
+
+        static Mesh* GetMesh(const std::string &name, int idx);
+
+        static std::vector<Mesh *> LoadMeshesFromFile(const std::string &filepath);
+
+        static ShaderProgram* LoadShaderProgram(const std::string& name, const std::string& vertexFilepath, const std::string& fragmentFilepath);
+        static ShaderProgram* GetShaderProgram(const std::string& name);
+
+        static Texture* LoadTexture(const std::string& path);
+        static Texture* GetTexture(const std::string& path);
+
+        static Material* CreateMaterial(const std::string& name);
+        static Material* GetMaterial(const std::string &name);
 
     };
 }

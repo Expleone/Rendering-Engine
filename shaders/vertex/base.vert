@@ -22,7 +22,6 @@ void main() {
     vec4 pos = model * vec4(aPos, 1.0f);
     worldPos = pos.xyz;
 
-    // FIX 1: Keep FragPos in World Space! Do not multiply by 'view' here.
     FragPos = pos.xyz;
 
     Normal = normalize(normalMatrix * aNormal); // This is correctly in World Space
