@@ -23,7 +23,9 @@ namespace BiBuild {
         Position = 0,
         Normal = 1,
         TexCoords = 2,
-        Color = 3
+        Color = 3,
+        Tangent = 4,
+        Bitangent = 5
     };
 
     class ShaderProgram {
@@ -51,6 +53,9 @@ namespace BiBuild {
 
         void SetUniformVec3(const char* name, const glm::vec3& vector) const {
             glUniform3fv(GetUniformLocation(name), 1, glm::value_ptr(vector));
+        }
+        void SetUniformVec4(const char* name, const glm::vec4& vector) const {
+            glUniform4fv(GetUniformLocation(name), 1, glm::value_ptr(vector));
         }
 
         void SetUniformInt(const char* name, int value) const {

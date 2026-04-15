@@ -132,34 +132,35 @@ int main() {
     // cubeMaterial->shininess = 64.0f;
 
 
-    auto sunObj = scene.CreateObject("SunLight");
-    auto* sunLight = sunObj->AddComponent<BiBuild::LightComponent>();
-
-    sunLight->type      = BiBuild::LightType::Directional;
-    sunLight->direction = glm::vec3(-0.5f, -1.0f, -0.5f); // Angled diagonally down
-    sunLight->ambient   = glm::vec3(0.1f, 0.1f, 0.15f);   // Slight blueish tint to global shadows
-    sunLight->diffuse   = glm::vec3(0.9f, 0.85f, 0.8f);   // Warm daytime sunlight
-    sunLight->specular  = glm::vec3(1.0f, 1.0f, 1.0f);
-    sunLight->intensity = 1.0f;
+    // auto sunObj = scene.CreateObject("SunLight");
+    // auto* sunLight = sunObj->AddComponent<BiBuild::LightComponent>();
+    //
+    // sunLight->type      = BiBuild::LightType::Directional;
+    // sunLight->direction = glm::vec3(-0.5f, -1.0f, -0.5f); // Angled diagonally down
+    // sunLight->ambient   = glm::vec3(0.1f, 0.1f, 0.15f);   // Slight blueish tint to global shadows
+    // sunLight->diffuse   = glm::vec3(0.9f, 0.85f, 0.8f);   // Warm daytime sunlight
+    // sunLight->specular  = glm::vec3(1.0f, 1.0f, 1.0f);
+    // sunLight->intensity = 1.0f;
 
 
     auto pointObj = scene.CreateObject("BlueRimLight");
     auto* pointModel = pointObj->AddComponent<BiBuild::ModelComponent>();
     pointModel->mesh = BiBuild::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
     auto* pointMaterial = BiBuild::ResourceManager::CreateMaterial("point");
-    pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
-    pointMaterial->diffuse   = glm::vec3(0.0f); //
+    pointMaterial->ambient   = glm::vec4(0.0f); // No self-illumination
+    pointMaterial->diffuse   = glm::vec4(0.0f); //
     pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
     pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
     pointModel->mat = pointMaterial;
     auto* pointLight = pointObj->AddComponent<BiBuild::LightComponent>();
     pointLight->type        = BiBuild::LightType::Point;
-    pointLight->ambient     = glm::vec3(0.0f);
-    pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);  // Bright teal/cyan to contrast the orange bird
+    pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);
+    pointLight->ambient     = 0.3f*pointLight->diffuse;
+    // Bright teal/cyan to contrast the orange bird
     pointLight->specular    = glm::vec3(0.5f, 0.8f, 1.0f);
     pointLight->attenuation = glm::vec3(1.0f, 0.0014f, 0.000007f); // Fades out nicely
     // pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
-    pointObj->transform->localPosition = glm::vec3(0.0f, 1000.0f, 00.0f); // Positioned above and behind the camera for rim lighting
+    pointObj->transform->localPosition = glm::vec3(0.0f, 20.0f, 00.0f); // Positioned above and behind the camera for rim lighting
     pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
     auto dragon = scene.CreateObject("dragon");
@@ -169,15 +170,51 @@ int main() {
     auto* dragonMaterial = BiBuild::ResourceManager::CreateMaterial("copper");
     dragonModel->mat = dragonMaterial;
     // 2. Set up a "Shiny Copper" Material
-    dragonMaterial->ambient   = glm::vec3(0.2f, 0.1f, 0.05f); // Deep, warm shadows
-    dragonMaterial->diffuse   = glm::vec3(1.0f, 0.5f, 0.2f);  // Base orange/copper color
+    dragonMaterial->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
+    dragonMaterial->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
     dragonMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
     dragonMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
     dragonMaterial->shininess = 10.0f;
 
     dragon->transform->localScale = glm::vec3(100);
-    // pointMesh->mesh = resourceManager.GetMesh("../test_models/Dragon_80K.obj");
-    // CameraControlState cameraLookState;
+
+
+    auto lemon = scene.CreateObject("lemon");
+    auto lemonModel = lemon->AddComponent<BiBuild::ModelComponent>();
+    lemonModel->mesh = BiBuild::ResourceManager::GetMesh("../test_models/lemon_4k.blend/lemon_4k.fbx");
+    lemonModel->mat = BiBuild::ResourceManager::CreateMaterial("lemon");
+    auto* lemonTex = BiBuild::ResourceManager::LoadTexture("../test_models/lemon_4k.blend/textures/lemon_diff_4k.jpg");
+    auto* lemonNorm = BiBuild::ResourceManager::LoadTexture("../test_models/lemon_4k.blend/textures/lemon_nor_gl_4k.jpg");
+    lemonModel->mat->textures.push_back(lemonTex);
+    lemonModel->mat->textures.push_back(lemonNorm);
+    // lemonModel->mat->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
+    // lemonModel->mat->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
+    // lemonModel->mat->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    lemonModel->mat->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    lemonModel->mat->shininess = 1.0f;
+    lemon->transform->localScale = glm::vec3(100);
+
+
+    auto ground = scene.CreateObject("ground");
+    auto groundModel = ground->AddComponent<BiBuild::ModelComponent>();
+    groundModel->mesh = BiBuild::ResourceManager::GetMesh("../test_models/rocks/ground.obj");
+    groundModel->mat = BiBuild::ResourceManager::CreateMaterial("ground");
+    auto groundTex = BiBuild::ResourceManager::LoadTexture("../test_models/rocks/gray_rocks.png");
+    auto groundNormal = BiBuild::ResourceManager::LoadTexture("../test_models/rocks/normalMap1.png");
+    groundModel->mat->textures.push_back(groundTex);
+    groundModel->mat->textures.push_back(groundNormal);
+    groundModel->mat->specular = glm::vec3(1.0);
+    groundModel->mat->emission = glm::vec3(0);
+
+    ground->transform->localScale = glm::vec3(100);
+
+
+    auto test = scene.CreateObject("test");
+    auto tmod = test->AddComponent<BiBuild::ModelComponent>();
+    tmod->mesh = BiBuild::ResourceManager::GetMesh("/home/expleoene/Documents/work/build/tnp/TNP.stl");
+    tmod->mat = BiBuild::ResourceManager::CreateMaterial("ground");
+
+
     float lastFrameTime = static_cast<float>(glfwGetTime());
     int framen = 0;
     // Main loop

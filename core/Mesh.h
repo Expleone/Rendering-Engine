@@ -21,8 +21,14 @@ namespace BiBuild {
     struct Vertex {
         glm::vec3 position;  // Where the vertex is (X, Y, Z)
         glm::vec3 normal;    // Which way the surface faces (for lighting)
+        glm::vec3 tangent;
+        glm::vec3 bitangent;
         glm::vec2 texCoords; // Where the texture wraps (U, V)
         glm::vec3 color;     // Vertex-specific colors
+    };
+    struct BoundingBox {
+        glm::vec3 min;
+        glm::vec3 max;
     };
 
     class Mesh {
@@ -35,8 +41,10 @@ namespace BiBuild {
         VertexArray vao;
         IndexBuffer ebo;
 
+
     public:
         ShaderProgram* shader = nullptr; // Store a reference to the shader for drawing
+        BoundingBox bb;
 
         Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices = {}, const std::string& name = "Mesh");
 

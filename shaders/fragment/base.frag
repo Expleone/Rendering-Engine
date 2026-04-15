@@ -5,6 +5,8 @@
 in vec3 VertexColor;
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 TexCoords;
+in mat3 TBN;
 out vec4 fragmentColor;
 
 
@@ -18,11 +20,13 @@ struct Light {
 };
 
 struct Material {
-    vec3 ambient;
-    vec3 diffuse;
+    vec4 ambient;
+    vec4 diffuse;
     vec3 specular;
     vec3 emission;
     float shininess; // Determines the size and focus of the specular highlight
+    int texNum;
+    sampler2D textures[16];
 };
 
 layout (std140) uniform Lights {
@@ -37,13 +41,21 @@ layout (std140) uniform Matrices {
 
 uniform Material material;
 
-vec3 CalculateLighting(vec3 normal, Material material) {
-    vec3 result = vec3(0.0);
 
+vec4 CalculateLighting(vec3 normal) {
+    vec4 result = vec4(0.0);
+
+    vec4 amb_mat = material.ambient;
+    vec4 diff_mat = material.diffuse;
+    if(material.texNum >= 1) {
+        diff_mat = diff_mat*texture(material.textures[0], TexCoords);
+        amb_mat = amb_mat*texture(material.textures[0], TexCoords);
+    }
+    vec3 viewPos = inverse(view)[3].xyz;
     for(int i = 0; i < numLights; i++){
         vec3 lightPos = lights[i].position.xyz;
         vec3 lightAmb = lights[i].ambient.xyz;
-        vec3 lightDiff = lights[i].diffuse.xyz;
+        vec4 lightDiff = vec4(lights[i].diffuse.xyz, 1.0f);
         vec3 lightSpec = lights[i].specular.xyz;
 
         float constant = lights[i].attenuation.x;
@@ -55,38 +67,55 @@ vec3 CalculateLighting(vec3 normal, Material material) {
         float cutoff = lights[i].attenuation.w;
 
         float dist = distance(lightPos, FragPos);
-        vec3 viewPos = inverse(view)[3].xyz;
+
 
         vec3 cameraDir = normalize(viewPos - FragPos);
 
-        vec3 ambient = lightAmb*material.ambient;
-        vec3 diffuse = vec3(0.0);
+        vec4 ambient = vec4(lightAmb, 1.0f)*amb_mat;
+        vec4 diffuse = vec4(0.0);
         vec3 specular = vec3(0.0);
 
         if(type == 0){
-            diffuse = max(dot(-lightDir, normal), 0.0) * lightDiff * material.diffuse;
-            specular = pow(max(dot(reflect(lightDir, Normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
-            result += (ambient + diffuse + specular);
+            float diffStrength = max(dot(-lightDir, normal), 0.0);
+            diffuse = diffStrength * lightDiff * diff_mat;
+            if(diffStrength > 0.0)
+            specular = pow(max(dot(reflect(lightDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
+            result += ambient + (diffuse + vec4(specular, 1.0f));
             continue;
         }else{
             float attenuationFactor = 1.0 / (constant + linear*dist + quadratic*dist*dist);
             vec3 lDir = normalize(lightPos - FragPos);
-            diffuse = max(dot(lDir, normal), 0.0) * lightDiff * material.diffuse;
-            specular = pow(max(dot(reflect(-lDir, Normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
+            float diffStrength = max(dot(lDir, normal), 0.0);
+            diffuse = diffStrength * lightDiff * diff_mat;
+            if(diffStrength > 0.0)
+            specular = pow(max(dot(reflect(-lDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
             float spotLightEffect = 1.0;
             if(type == 2){
                 if (dot(-lDir, lightDir) < cos(cutoff)){
                     spotLightEffect = 0.0;
                 }
             }
-            result += spotLightEffect*attenuationFactor*(ambient + diffuse + specular);
+            result += ambient + spotLightEffect*attenuationFactor*(diffuse + vec4(specular,1.0f)); //TODO: decide smth with alph channel
         }
     }
     return result;
 }
 
 void main() {
-    vec3 color = material.emission + CalculateLighting(Normal, material);
 
-    fragmentColor = vec4(color, 1.0f);
+    vec3 normal = Normal;
+    if(material.texNum >= 2){
+        normal = texture(material.textures[1], TexCoords).rgb;
+
+        normal = normal * 2.0 - 1.0;
+
+//        normal.y = -normal.y;
+
+        normal = normalize(TBN * normal);
+    }
+
+
+    vec4 color = vec4(material.emission, 1.0f) + CalculateLighting(normal);
+
+    fragmentColor = color;
 }

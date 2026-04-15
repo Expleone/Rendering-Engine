@@ -17,11 +17,13 @@ class Texture {
     GLuint texId;
 
 public:
-    Texture(const std::string filepath, bool mipmap) {
+    Texture(const std::string& filepath, bool mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 
         int width, height, nrChannels;
         stbi_set_flip_vertically_on_load(true);
@@ -54,7 +56,7 @@ public:
     Texture(const Texture&) = delete;
     Texture& operator=(const Texture&) = delete;
 
-    GLuint GetID() const { return texId; }
+    [[nodiscard]] GLuint GetID() const { return texId; }
 };
 
 } // BiBuild

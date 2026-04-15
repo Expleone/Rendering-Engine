@@ -3,12 +3,15 @@ layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoords;
 layout(location = 3) in vec3 aColor;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
 
 out vec3 FragPos;
 out vec3 worldPos;
 out vec3 Normal;
 out vec2 TexCoords;
 out vec3 VertexColor;
+out mat3 TBN;
 
 uniform mat4 model;
 uniform mat3 normalMatrix;
@@ -24,10 +27,16 @@ void main() {
 
     FragPos = pos.xyz;
 
-    Normal = normalize(normalMatrix * aNormal); // This is correctly in World Space
+    Normal = normalize(normalMatrix * aNormal);
 
     TexCoords = aTexCoords;
     VertexColor = aColor;
+
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 N = normalize(normalMatrix * aNormal);
+    vec3 B = normalize(normalMatrix * aBitangent);
+
+    TBN = mat3(T, B, N);
 
     // Apply the view matrix here instead
     gl_Position = projection * view * pos;

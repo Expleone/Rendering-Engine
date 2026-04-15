@@ -17,7 +17,7 @@ namespace BiBuild {
     }
 
     Texture *ResourceManager::LoadTexture(const std::string &path) {
-        auto texture = std::make_unique<Texture>(path,0);
+        auto texture = std::make_unique<Texture>(path,1);
         auto* texPtr = texture.get();
         Get().textures.emplace(path, std::move(texture));
         return texPtr;
@@ -167,7 +167,7 @@ namespace BiBuild {
             aiProcess_Triangulate            |
             aiProcess_JoinIdenticalVertices  |
             aiProcess_SortByPType            |
-            aiProcess_GenNormals);
+            aiProcess_GenNormals             );
 
         if( nullptr == ai_scene) {
             std::cerr << "Error loading the file: " << filepath << std::endl;
@@ -175,7 +175,6 @@ namespace BiBuild {
         }
         auto newMeshes = Get().processAssimpScene(ai_scene, filepath);
 
-        // We're done. Release all resources associated with this import
         aiReleaseImport(ai_scene);
         return newMeshes;
     }
@@ -225,18 +224,22 @@ namespace BiBuild {
     std::vector<Mesh *> ResourceManager::processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath){
         if (!ai_scene->HasMeshes()) return {};
         std::vector<Mesh*> newMeshes;
-        for (int i = 0; i < ai_scene->mNumMeshes; i ++) {
+        for (size_t i = 0; i < ai_scene->mNumMeshes; i ++) {
             std::string obj_name = filepath + ":" + std::to_string(i);
 
             auto* ai_mesh = ai_scene->mMeshes[i];
             std::vector<Vertex> vertices;
 
-            for (int j = 0; j < ai_mesh->mNumVertices; j++) {
+            for (size_t j = 0; j < ai_mesh->mNumVertices; j++) {
                 Vertex v{};
                 v.position = glm::vec3(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z);
                 v.normal = glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z));
                 if (ai_mesh->HasTextureCoords(0)) {
                     v.texCoords = glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y);
+                }
+                if (ai_mesh->HasTangentsAndBitangents()) {
+                    v.tangent = glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z);
+                    v.bitangent = glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z);
                 }
                 vertices.push_back(v);
             }

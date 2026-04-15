@@ -13,8 +13,8 @@ namespace BiBuild {
         
         if (shaderProgram) {
             shaderProgram->Use();
-            shaderProgram->SetUniformVec3("material.ambient", ambient);
-            shaderProgram->SetUniformVec3("material.diffuse", diffuse);
+            shaderProgram->SetUniformVec4("material.ambient", ambient);
+            shaderProgram->SetUniformVec4("material.diffuse", diffuse);
             shaderProgram->SetUniformVec3("material.specular", specular);
             shaderProgram->SetUniformVec3("material.emission", emission);
             shaderProgram->SetUniformFloat("material.shininess", shininess);
@@ -28,5 +28,6 @@ namespace BiBuild {
                 shaderProgram->SetUniformInt(("material.textures[" + std::to_string(i) + "]").c_str(), static_cast<int>(i));
             }
         }
+        shaderProgram->SetUniformInt("material.texNum", textures.size());
     }
 } // BiBuild
