@@ -33,7 +33,6 @@ namespace BiBuild {
 
     class Mesh {
         uuids::uuid id;
-        std::string name;
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         bool isDirty = true; // Indicates if GPU buffers need updating
@@ -45,6 +44,7 @@ namespace BiBuild {
     public:
         ShaderProgram* shader = nullptr; // Store a reference to the shader for drawing
         BoundingBox bb;
+        std::string name;
 
         Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices = {}, const std::string& name = "Mesh");
 

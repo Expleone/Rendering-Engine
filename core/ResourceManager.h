@@ -51,9 +51,11 @@ namespace BiBuild {
         static Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize);
         static Mesh* LoadMesh(const std::string &name, const float *vertices, unsigned int vSize, const unsigned short *indices, unsigned int iSize, const glm::vec3& color);
         static Mesh* LoadMesh(const std::string& name, const std::string& filepath);
-        static Mesh* GetMesh(const std::string& filepath);
 
+        static Mesh* GetMesh(const std::string& filepath);
         static Mesh* GetMesh(const std::string &name, int idx);
+
+        static Mesh* DeleteMesh(const std::string& name, int idx);
 
         static std::vector<Mesh *> LoadMeshesFromFile(const std::string &filepath);
 

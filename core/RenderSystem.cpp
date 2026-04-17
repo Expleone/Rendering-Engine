@@ -40,7 +40,7 @@ namespace BiBuild {
         // glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        Get().defaultShader = ResourceManager::LoadShaderProgram("default", "../shaders/vertex/base.vert", "../shaders/fragment/base.frag");
+        Get().defaultShader = ResourceManager::LoadShaderProgram("default", "./shaders/vertex/base.vert", "./shaders/fragment/base.frag");
         Get().matricesUBO = new UniformBuffer(sizeof(glm::mat4) * 2, static_cast<GLuint>(UBOBinding::Matrices));
 
 
