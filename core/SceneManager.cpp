@@ -4,7 +4,11 @@
 
 #include "SceneManager.h"
 
+#include "RenderSystem.h"
+#include "ResourceManager.h"
 #include "../components/CameraComponent.h"
+#include "../components/ModelComponent.h"
+#include "../test_models/cube.h"
 
 namespace BiBuild {
 
@@ -13,6 +17,7 @@ namespace BiBuild {
         rootObject = CreateObject("SceneRoot");
         cameraObject = CreateObject("MainCamera");
         cameraObject->AddComponent<CameraComponent>();
+        ApplySceneSettings();
     }
 
     SceneObject* SceneManager::GetRoot() const {
@@ -24,7 +29,7 @@ namespace BiBuild {
         auto obj = std::make_unique<SceneObject>(uuid, name);
 
         SceneObject* ptr = obj.get();
-        objects.push_back(std::move(obj));///Crushes here sometimes
+        objects.push_back(std::move(obj));
 
         // Automatically parent to root, unless this IS the root
         if (rootObject != nullptr) {
@@ -32,6 +37,45 @@ namespace BiBuild {
         }
 
         return ptr;
+    }
+    SceneObject* SceneManager::CreateSkyBox(const std::vector<std::string>& faces) {
+        if (skybox) return skybox;
+        auto uuid = Helper::genUUID();
+        auto obj = std::make_unique<SceneObject>(uuid, "Skybox");
+        auto model = obj->AddComponent<ModelComponent>();
+        model->mesh = ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+        model->mat = ResourceManager::CreateMaterial("SkyboxMaterial");
+        auto skyboxTex = ResourceManager::LoadTextureCubeMap(faces);
+        if (skyboxTex->GetID() == 0) std::cout << "Warning: Couldn't load skybox" << std::endl;
+        if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(skyboxTex);
+        model->mat->textures.push_back(skyboxTex);
+        model->mat->shader = ResourceManager::LoadShaderProgram("SkyboxShader", "./shaders/vertex/skybox.vert", "./shaders/fragment/skybox.frag");
+        SceneObject* ptr = obj.get();
+        if (rootObject != nullptr) {
+            rootObject->AddChild(ptr);
+        }
+        objects.push_back(std::move(obj));
+        skybox = ptr;
+        return ptr;
+    }
+
+
+    void SceneManager::ChangeSkyBox(const std::vector<std::string> &faces){
+        if (!skybox) {
+            CreateSkyBox(faces);
+            return;
+        }
+        const auto model = skybox->GetComponent<ModelComponent>();
+        if (!model) return;
+        auto mat = model->mat;
+        if (!mat) return;
+        auto newTexture = ResourceManager::LoadTextureCubeMap(faces);
+        if (!mat->textures.empty()) {
+            mat->textures[0] = newTexture;
+        }else {
+            mat->textures.push_back(newTexture);
+        }
+        if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(newTexture);
     }
 
     void SceneManager::UpdateScene() {
@@ -67,4 +111,13 @@ namespace BiBuild {
         }
     }
 
+    void SceneManager::ApplySceneSettings() {
+        RenderSystem::SetFogDistance(fogDistClose, fogDistFar);
+    }
+
+    void SceneManager::SetFogDistance(float close, float far) {
+        fogDistClose = close;
+        fogDistFar = far;
+        ApplySceneSettings();
+    }
 } // BiBuild

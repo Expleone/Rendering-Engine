@@ -23,12 +23,24 @@ namespace BiBuild {
         if (Get().camera) {
             Get().camera->aspectRatio = static_cast<float>(Get().screenWidth) / static_cast<float>(Get().screenHeight);
         }
+
+        glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+        glfwWindowHint(GLFW_RED_BITS, 8);
+        glfwWindowHint(GLFW_GREEN_BITS, 8);
+        glfwWindowHint(GLFW_BLUE_BITS, 8);
+        glfwWindowHint(GLFW_ALPHA_BITS, 8);
+
+        glfwWindowHint(GLFW_DEPTH_BITS, 24);
+
+        glfwWindowHint(GLFW_STENCIL_BITS, 8);
+
         glViewport(0, 0, Get().screenWidth, Get().screenHeight);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
-        glEnable(GL_BLEND);
+        // glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_CULL_FACE);
@@ -40,18 +52,18 @@ namespace BiBuild {
         // glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+
         Get().defaultShader = ResourceManager::LoadShaderProgram("default", "./shaders/vertex/base.vert", "./shaders/fragment/base.frag");
         Get().matricesUBO = new UniformBuffer(sizeof(glm::mat4) * 2, static_cast<GLuint>(UBOBinding::Matrices));
-
-
         Get().lightsUBO = new UniformBuffer(sizeof(LightsUBOStructure), static_cast<GLuint>(UBOBinding::Lights));
+        Get().fogUBO = new UniformBuffer(sizeof(FogUBOStructure), static_cast<GLuint>(UBOBinding::Fog));
     }
 
     RenderSystem::~RenderSystem() = default;
 
 
-    void RenderSystem::UpdateAndDraw(const std::vector<std::unique_ptr<SceneObject>>& sceneObjects, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
-
+    void RenderSystem::UpdateAndDraw(const SceneManager& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+        // std::vector<std::unique_ptr<SceneObject>> sceneObjects = scene.objects;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (!Get().defaultShader) {
@@ -67,7 +79,7 @@ namespace BiBuild {
         Get().matricesUBO->UpdateSubData(&uboData, sizeof(uboData), 0);
 
         int lightCount = 0;
-        for (const std::unique_ptr<SceneObject>& objPtr : sceneObjects) {
+        for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             if (lightCount >= 100) break; // Prevent overflow of our UBO array
             SceneObject* obj = objPtr.get();
             auto* light_comp = obj->GetComponent<LightComponent>();
@@ -82,15 +94,45 @@ namespace BiBuild {
         }
         Get().lightsUBOStruct.numLights = lightCount;
         Get().lightsUBO->UpdateSubData(&Get().lightsUBOStruct, sizeof(Get().lightsUBOStruct), 0);
+        Get().fogUBO->UpdateData(&Get().fogUBOStruct, sizeof(Get().fogUBOStruct));
 
         // Track the currently active shader to prevent redundant state changes
         ShaderProgram* activeShader = nullptr;
         Get().drawCallsLastFrame = 0;
-        Get().objectsOnScreenLastFrame = static_cast<int>(sceneObjects.size());
-        // 2. Render all objects
-        for (const std::unique_ptr<SceneObject>& objPtr : sceneObjects) {
+        Get().objectsOnScreenLastFrame = static_cast<int>(scene.objects.size());
+
+        // 1. Render skybox first (disable depth write)
+        if (scene.skybox) {
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LEQUAL);
+            glDisable(GL_CULL_FACE);
+
+            auto* model_comp = scene.skybox->GetComponent<ModelComponent>();
+            if (model_comp && model_comp->mesh){
+                auto* material = model_comp->mat;
+                ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
+
+                if (activeShader != targetShader) {
+                    targetShader->Use();
+                    activeShader = targetShader;
+                }
+                targetShader->SendAdditionalInfo();
+                model_comp->Draw(targetShader);
+                Get().drawCallsLastFrame++;
+
+
+            }
+            // 2. Re-enable depth writes and restore depth function
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);
+
+        }
+
+        // 3. Render all other objects
+        for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             SceneObject* obj = objPtr.get();
-            if (!obj) continue;
+            if (!obj || obj->name == "Skybox") continue;
 
             auto* model_comp = obj->GetComponent<ModelComponent>();
             if (!model_comp || !model_comp->mesh) continue;
@@ -103,7 +145,9 @@ namespace BiBuild {
                 targetShader->Use();
                 activeShader = targetShader;
             }
-
+            //Send additional uniforms to shaders
+            targetShader->SendAdditionalInfo();
+            // targetShader->SetUniformFloat()
             model_comp->Draw(targetShader);
 
             Get().drawCallsLastFrame++;
@@ -119,9 +163,60 @@ namespace BiBuild {
         if (camera) {
             camera->aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
         }
+
     }
 
     ShaderProgram *RenderSystem::GetDefaultShader() {
         return Get().defaultShader;
     }
+
+    void RenderSystem::SetDefaultShader(ShaderProgram* prg) {
+        Get().defaultShader = prg;
+    }
+
+    void RenderSystem::SetFogTexture(Texture *tex) {
+        Get().fogTex = tex;
+        Get().fogUBOStruct.useTex = true;
+    }
+
+    Texture *RenderSystem::GetFogTexture() {
+        if (Get().fogUBOStruct.useTex) {
+            return  Get().fogTex;
+        }
+        return nullptr;
+    }
+
+    void RenderSystem::SetUseSkyboxTexAsFog(bool use) {
+        Get().useSkyboxTexAsFog = use;
+    }
+
+    bool RenderSystem::GetUseSkyboxTexAsFog() {
+        return Get().useSkyboxTexAsFog;
+    }
+
+    void RenderSystem::SetFogSettings(FogUBOStructure settings) {
+        Get().fogUBOStruct = settings;
+    }
+
+    void RenderSystem::SetFogColor(glm::vec3 color) {
+        Get().fogUBOStruct.color = glm::vec4(color,1);
+    }
+
+    void RenderSystem::SetFogDistance(float distanceClose, float distanceFar) {
+        Get().fogUBOStruct.distClose = distanceClose;
+        Get().fogUBOStruct.distFar = distanceFar;
+    }
+
+    void RenderSystem::SetFogSettings(glm::vec3 color, float distanceClose, float distanceFar, bool useTex) {
+        Get().fogUBOStruct = {glm::vec4(color,1), distanceClose, distanceFar, useTex};
+    }
+
+    void RenderSystem::SetFogUseTex(bool useTex) {
+        Get().fogUBOStruct.useTex = useTex;
+    }
+
+    FogUBOStructure RenderSystem::GetFogSettings() {
+        return Get().fogUBOStruct;
+    }
+
 } // BiBuild

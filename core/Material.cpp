@@ -9,11 +9,13 @@
 namespace BiBuild {
     void Material::SendToShader(ShaderProgram* shaderProgram) const {
 
-        
-        
+        auto fogTex = RenderSystem::GetFogTexture();
+        GLuint textureUnit = 0;
+        int tex2DCount = 0;
+
         if (shaderProgram) {
             shaderProgram->Use();
-            shaderProgram->SetUniformVec4("material.ambient", ambient);
+            shaderProgram->SetUniformVec3("material.ambient", ambient);
             shaderProgram->SetUniformVec4("material.diffuse", diffuse);
             shaderProgram->SetUniformVec3("material.specular", specular);
             shaderProgram->SetUniformVec3("material.emission", emission);
@@ -23,11 +25,34 @@ namespace BiBuild {
 
         for (size_t i = 0; i < textures.size(); ++i) {
             if (textures[i]) {
-                glActiveTexture(GL_TEXTURE0 + static_cast<GLuint>(i));
-                glBindTexture(GL_TEXTURE_2D, textures[i]->GetID());
-                shaderProgram->SetUniformInt(("material.textures[" + std::to_string(i) + "]").c_str(), static_cast<int>(i));
+                glActiveTexture(GL_TEXTURE0 + textureUnit);
+                if (textures[i]->GetType() == TexType::Tex2D) {
+                    glBindTexture(GL_TEXTURE_2D, textures[i]->GetID());
+                    if (shaderProgram) {
+                        shaderProgram->SetUniformInt(("material.textures[" + std::to_string(tex2DCount) + "]").c_str(), static_cast<int>(textureUnit));
+                    }
+                    tex2DCount++;
+                }
+
+                else {
+                    glBindTexture(GL_TEXTURE_CUBE_MAP, textures[i]->GetID());
+                    if (shaderProgram)
+                        shaderProgram->SetUniformInt("cubeMapTex", static_cast<int>(textureUnit));
+                }
+                textureUnit++;
             }
         }
-        shaderProgram->SetUniformInt("material.texNum", textures.size());
+        int fogUnitIndex = 16;
+        if (shaderProgram) {
+            shaderProgram->SetUniformInt("fogTex", fogUnitIndex);
+        }
+        if (fogTex) {
+            glActiveTexture(GL_TEXTURE0 + fogUnitIndex);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, fogTex->GetID());
+        }
+
+
+        if (shaderProgram)
+        shaderProgram->SetUniformInt("material.texNum", tex2DCount);
     }
 } // BiBuild

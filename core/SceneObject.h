@@ -23,6 +23,7 @@ namespace BiBuild {
         TransformComponent* transform;
 
         std::vector<std::unique_ptr<Component>> components;
+        std::vector<std::unique_ptr<Component>>
 
         SceneObject(uuids::uuid id, std::string n) : uuid(id), name(std::move(n)), transform(nullptr) {
             transform = AddComponent<TransformComponent>();

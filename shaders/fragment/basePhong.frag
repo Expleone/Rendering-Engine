@@ -24,7 +24,7 @@ struct Material {
     vec4 diffuse;
     vec3 specular;
     vec3 emission;
-    float shininess;
+    float shininess; // Determines the size and focus of the specular highlight
     int texNum;
     sampler2D textures[16];
 };
@@ -45,7 +45,6 @@ layout (std140) uniform Fog {
     float fogDistanceFar;
     int useSkybox;
 };
-uniform samplerCube fogTex;
 
 uniform Material material;
 
@@ -90,7 +89,7 @@ vec3 CalculateLighting(vec3 normal) {
                 vec3 halfwayDir = normalize(lightDir + cameraDir);
                 float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
                 specular = spec * lightSpec * material.specular;
-//                specular = pow(max(dot(reflect(lightDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
+                //                specular = pow(max(dot(reflect(lightDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
 
             }
             //
@@ -106,7 +105,7 @@ vec3 CalculateLighting(vec3 normal) {
                 vec3 halfwayDir = normalize(lDir + cameraDir);
                 float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
                 specular = spec * lightSpec * material.specular;
-//                specular = pow(max(dot(reflect(-lDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
+                //                specular = pow(max(dot(reflect(-lDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
             }
             //
             float spotLightEffect = 1.0;
@@ -137,14 +136,13 @@ void main() {
 
         normal = normalize(TBN * normal);
     }
-    vec3 fog = fogColor.xyz;
+
     vec3 viewPos = inverse(view)[3].xyz;
     float dis = distance(viewPos, FragPos);
-    float fogCoeficient = 0.0;
-    if(dis >= fogDistanceClose) fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
-    if(fogCoeficient==1) discard;
-    if(useSkybox == 1) fog = texture(fogTex, FragPos - viewPos).rgb;
-    vec4 color = vec4(mix(material.emission + CalculateLighting(normal), fog, fogCoeficient), alpha);
+//    float fogCoeficient = 0;
+//    if(dis >= fogDistanceClose) fogCoeficient = (dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose);
+
+    vec4 color = vec4(material.emission + CalculateLighting(normal), alpha);
 
     fragmentColor = color;
 }

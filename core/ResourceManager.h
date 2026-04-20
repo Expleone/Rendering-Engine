@@ -63,6 +63,7 @@ namespace BiBuild {
         static ShaderProgram* GetShaderProgram(const std::string& name);
 
         static Texture* LoadTexture(const std::string& path);
+        static Texture* LoadTextureCubeMap(const std::vector<std::string> &faces);
         static Texture* GetTexture(const std::string& path);
 
         static Material* CreateMaterial(const std::string& name);

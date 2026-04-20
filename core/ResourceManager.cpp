@@ -23,6 +23,22 @@ namespace BiBuild {
         return texPtr;
     }
 
+    Texture* ResourceManager::LoadTextureCubeMap(const std::vector<std::string> &faces) {
+        std::string key = "cube:";
+        for (const std::string& face : faces) {
+            key += face + ";";
+        }
+
+        auto it = Get().textures.find(key);
+        if (it != Get().textures.end()) {
+            return it->second.get();
+        }
+        auto texture = std::make_unique<Texture>(faces,1);
+        Texture* texPtr = texture.get();
+        Get().textures.emplace(key, std::move(texture));
+        return texPtr;
+    }
+
 
     Mesh* ResourceManager::LoadMesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) {
         auto it = Get().meshes.find(name);

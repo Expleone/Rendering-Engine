@@ -41,6 +41,13 @@ namespace BiBuild {
         int numLights;
     };
 
+    struct FogUBOStructure {
+        glm::vec4 color;
+        float distClose;
+        float distFar;
+        int useTex;
+    };
+
     class RenderSystem {
     private:
         // Internal state that persists across frames
@@ -48,9 +55,12 @@ namespace BiBuild {
         ShaderProgram* defaultShader = nullptr;
         UniformBuffer* matricesUBO = nullptr; // UBO for view and projection matrices
         UniformBuffer* lightsUBO = nullptr; // UBO for lighting data
+        UniformBuffer* fogUBO = nullptr;
         CameraComponent* camera = nullptr;
         LightsUBOStructure lightsUBOStruct{};
-
+        bool useSkyboxTexAsFog = true;
+        FogUBOStructure fogUBOStruct{glm::vec4(0), 100, 300,  0};
+        Texture* fogTex = nullptr;
 
         // unsigned int gridVAO = 0, gridVBO = 0; // For drawing the 3D floor grid
         int screenWidth = 0, screenHeight = 0;
@@ -73,8 +83,19 @@ namespace BiBuild {
 
         static void Initialize(GLFWwindow *window, int width, int height, SceneObject *cameraObject);
 
-        static void UpdateAndDraw(const std::vector<std::unique_ptr<SceneObject>>& sceneObjects, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
+        static void UpdateAndDraw(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
         static ShaderProgram* GetDefaultShader();
+        static void SetDefaultShader(ShaderProgram* prg);
+        static void SetFogTexture(Texture* tex);
+        static Texture* GetFogTexture();
+        static void SetUseSkyboxTexAsFog(bool use);
+        static bool GetUseSkyboxTexAsFog();
+        static void SetFogSettings(FogUBOStructure settings);
+        static void SetFogSettings(glm::vec3 color, float distanceClose, float distanceFar, bool useTex);
+        static void SetFogColor(glm::vec3 color);
+        static void SetFogDistance(float distanceClose, float distanceFar);
+        static void SetFogUseTex(bool useTex);
+        static FogUBOStructure GetFogSettings();
     };
 
 } // BiBuild

@@ -16,15 +16,21 @@ namespace BiBuild {
     private:
 
         SceneObject* rootObject = nullptr;
-
+        float fogDistClose = 400;
+        float fogDistFar = 500;
 
     public:
         std::vector<std::unique_ptr<SceneObject>> objects;
         SceneManager();
         SceneObject* cameraObject = nullptr;
+        SceneObject* skybox = nullptr;
         [[nodiscard]] SceneObject* GetRoot() const;
 
         SceneObject* CreateObject(const std::string& name);
+        SceneObject* CreateSkyBox(const std::vector<std::string>& faces);
+        void ChangeSkyBox(const std::vector<std::string>& faces);
+        void ApplySceneSettings();
+        void SetFogDistance(float close, float far);
 
         void UpdateScene();
 

@@ -129,6 +129,8 @@ add_executable(viewer main.cpp test_models/birds.c
         core/stb_image.cpp
         gui/ModelLoadGUI.cpp
         gui/ModelLoadGUI.h
+        ObjectScripts/ObjectScript.cpp
+        ObjectScripts/ObjectScript.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c

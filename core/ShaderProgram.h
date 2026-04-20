@@ -17,7 +17,8 @@
 namespace BiBuild {
     enum class UBOBinding : GLuint {
         Matrices = 0,
-        Lights = 1
+        Lights = 1,
+        Fog = 2
     };
     enum class AttributeLocation : GLuint {
         Position = 0,
@@ -28,11 +29,25 @@ namespace BiBuild {
         Bitangent = 5
     };
 
+    enum class UniformType {
+        Integer,
+        Vec3,
+        Float,
+    };
+
+    struct AdditionalShaderInfo {
+        std::string uniformName;
+        void* infoPtr = nullptr;
+        UniformType type = UniformType::Integer;
+    };
+
     class ShaderProgram {
         GLuint programID = 0;
         mutable std::unordered_map<std::string, GLuint> locations;
+        std::vector<AdditionalShaderInfo> shaderInfo;
+
     public:
-        ShaderProgram(std::string fragmentShaderPath, std::string vertexShaderPath) {
+        ShaderProgram(const std::string& fragmentShaderPath, const std::string& vertexShaderPath) {
 
             std::string vertexSource = Helper::read_file(vertexShaderPath.c_str());
             std::string fragmentSource = Helper::read_file(fragmentShaderPath.c_str());
@@ -41,6 +56,7 @@ namespace BiBuild {
             GLuint blockIndex = glGetUniformBlockIndex(programID, "Matrices");
             glUniformBlockBinding(programID, blockIndex, static_cast<GLuint>(UBOBinding::Matrices));
             glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "Lights"), static_cast<GLuint>(UBOBinding::Lights));
+            glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "Fog"), static_cast<GLuint>(UBOBinding::Fog));
         }
 
         void Use() const {
@@ -84,6 +100,30 @@ namespace BiBuild {
             }
 
             return location;
+        }
+
+        void SendAdditionalInfo() {
+            for (auto& info : shaderInfo) {
+                if (!info.infoPtr) {
+                    continue;
+                }
+                
+                switch (info.type) {
+                    case UniformType::Integer:
+                        SetUniformInt(info.uniformName.c_str(), *static_cast<int*>(info.infoPtr));
+                        break;
+                    case UniformType::Vec3:
+                        SetUniformVec3(info.uniformName.c_str(), *static_cast<glm::vec3*>(info.infoPtr));
+                        break;
+                    case UniformType::Float:
+                        SetUniformFloat(info.uniformName.c_str(), *static_cast<float*>(info.infoPtr));
+                        break;
+                }
+            }
+        }
+
+        void AddInfo(const std::string& name, void* ptr, const UniformType type) {
+            shaderInfo.push_back({name, ptr, type});
         }
 
         ~ShaderProgram() {
