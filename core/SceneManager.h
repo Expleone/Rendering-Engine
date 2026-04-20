@@ -35,6 +35,7 @@ namespace BiBuild {
         void UpdateScene();
 
         static void UpdateTransformHierarchy(TransformComponent* transform, const glm::mat4& parentWorldMatrix);
+        void UpdateScripts();
     };
 } // BiBuild
 

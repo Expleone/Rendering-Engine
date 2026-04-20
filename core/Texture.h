@@ -56,6 +56,38 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+    Texture(const std::string& filepath, bool mipmap, GLint wrapMode, GLint filterMode) {
+        type = TexType::Tex2D;
+        glGenTextures(1, &texId);
+        glBindTexture(GL_TEXTURE_2D, texId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMode);
+
+        int width, height, nrChannels;
+        stbi_set_flip_vertically_on_load(true);
+
+        unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
+            GLenum format = GL_RGB;
+            if (nrChannels == 1) format = GL_RED;
+            else if (nrChannels == 3) format = GL_RGB;
+            else if (nrChannels == 4) format = GL_RGBA;
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
+        } else {
+            std::cout << "Failed to load texture at path: " << filepath << std::endl;
+
+            glDeleteTextures(1, &texId);
+            texId = 0;
+
+        }
+        stbi_image_free(data);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     Texture(const std::vector<std::string>& faces, const bool mipmap) {
         type = TexType::CubeMap;
         glGenTextures(1, &texId);

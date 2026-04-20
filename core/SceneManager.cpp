@@ -7,7 +7,9 @@
 #include "RenderSystem.h"
 #include "ResourceManager.h"
 #include "../components/CameraComponent.h"
+#include "../components/LightComponent.h"
 #include "../components/ModelComponent.h"
+#include "../ObjectScripts/SkyboxScript.h"
 #include "../test_models/cube.h"
 
 namespace BiBuild {
@@ -40,20 +42,37 @@ namespace BiBuild {
     }
     SceneObject* SceneManager::CreateSkyBox(const std::vector<std::string>& faces) {
         if (skybox) return skybox;
+
         auto uuid = Helper::genUUID();
         auto obj = std::make_unique<SceneObject>(uuid, "Skybox");
         auto model = obj->AddComponent<ModelComponent>();
         model->mesh = ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
         model->mat = ResourceManager::CreateMaterial("SkyboxMaterial");
+
         auto skyboxTex = ResourceManager::LoadTextureCubeMap(faces);
         if (skyboxTex->GetID() == 0) std::cout << "Warning: Couldn't load skybox" << std::endl;
         if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(skyboxTex);
+        auto sunTex = ResourceManager::LoadTexture("resources/textures/skyboxes/outrun-sunset.png", GL_CLAMP_TO_BORDER, GL_NEAREST);
+
         model->mat->textures.push_back(skyboxTex);
+        model->mat->textures.push_back(sunTex);
         model->mat->shader = ResourceManager::LoadShaderProgram("SkyboxShader", "./shaders/vertex/skybox.vert", "./shaders/fragment/skybox.frag");
+
+        auto sunlight = obj->AddComponent<LightComponent>();
+        sunlight->type = LightType::Directional;
+        sunlight->intensity = 1.0f;
+        sunlight->ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+        sunlight->diffuse = glm::vec3(0.9f, 0.9f, 0.8f);
+        sunlight->specular = glm::vec3(1.0f, 1.0f, 1.0f);
+        sunlight->direction = glm::vec3(0, -1.0f, 0);
+
+        obj->AddScript<SkyboxScript>();
+
         SceneObject* ptr = obj.get();
         if (rootObject != nullptr) {
             rootObject->AddChild(ptr);
         }
+
         objects.push_back(std::move(obj));
         skybox = ptr;
         return ptr;
@@ -82,7 +101,10 @@ namespace BiBuild {
         if (rootObject) {
             UpdateTransformHierarchy(rootObject->GetComponent<TransformComponent>(), glm::mat4(1));
         }
+        UpdateScripts();
     }
+
+
 
     void SceneManager::UpdateTransformHierarchy(TransformComponent* transform, const glm::mat4& parentWorldMatrix) {
         glm::mat4 effectiveParentMatrix = parentWorldMatrix;
@@ -108,6 +130,13 @@ namespace BiBuild {
             if (TransformComponent* childTransform = child->GetComponent<TransformComponent>()) {
                 UpdateTransformHierarchy(childTransform, transform->worldMatrix);
             }
+        }
+    }
+
+    void SceneManager::UpdateScripts() {
+        for (auto& object : objects) {
+            auto objPtr = object.get();
+            if (objPtr) objPtr->ExecuteScripts();
         }
     }
 

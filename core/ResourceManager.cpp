@@ -23,6 +23,13 @@ namespace BiBuild {
         return texPtr;
     }
 
+    Texture *ResourceManager::LoadTexture(const std::string &path, GLint mode, GLint filterMode) {
+        auto texture = std::make_unique<Texture>(path,1, mode, filterMode);
+        auto* texPtr = texture.get();
+        Get().textures.emplace(path, std::move(texture));
+        return texPtr;
+    }
+
     Texture* ResourceManager::LoadTextureCubeMap(const std::vector<std::string> &faces) {
         std::string key = "cube:";
         for (const std::string& face : faces) {

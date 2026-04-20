@@ -131,6 +131,8 @@ add_executable(viewer main.cpp test_models/birds.c
         gui/ModelLoadGUI.h
         ObjectScripts/ObjectScript.cpp
         ObjectScripts/ObjectScript.h
+        ObjectScripts/SkyboxScript.cpp
+        ObjectScripts/SkyboxScript.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c

@@ -5,4 +5,7 @@
 #include "ObjectScript.h"
 
 namespace BiBuild {
+	void ObjectScript::Update() {
+		// Default no-op update for scripts that do not need per-frame logic.
+	}
 } // BiBuild

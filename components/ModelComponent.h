@@ -27,7 +27,12 @@ namespace BiBuild {
         ModelComponent(SceneObject* owner) : Component(owner){}
 
         void Draw(ShaderProgram* shader) {
-            if (mat) mat->SendToShader(shader);
+            static Material fallbackMaterial;
+            if (mat) {
+                mat->SendToShader(shader);
+            } else {
+                fallbackMaterial.SendToShader(shader);
+            }
             auto modelMatrix = owner->transform->worldMatrix;
             mesh->Draw(modelMatrix, shader);
         }

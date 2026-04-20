@@ -52,12 +52,12 @@ void changeMainShader() {
 
 std::vector<std::string> skyboxFaces
 {
-    "test_models/sky_09_2k/sky_09_cubemap_2k/px.png",
-    "test_models/sky_09_2k/sky_09_cubemap_2k/nx.png",
-    "test_models/sky_09_2k/sky_09_cubemap_2k/py.png",
-    "test_models/sky_09_2k/sky_09_cubemap_2k/ny.png",
-    "test_models/sky_09_2k/sky_09_cubemap_2k/pz.png",
-    "test_models/sky_09_2k/sky_09_cubemap_2k/nz.png"
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/px.png",
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/nx.png",
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/py.png",
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/ny.png",
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/pz.png",
+    "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/nz.png"
 };
 
 int main() {
@@ -276,7 +276,7 @@ int main() {
 
     auto test = scene.CreateObject("test");
     auto tmod = test->AddComponent<BiBuild::ModelComponent>();
-    tmod->mesh = BiBuild::ResourceManager::GetMesh("/home/expleoene/Documents/work/build/tnp/TNP.stl");
+    tmod->mesh = BiBuild::ResourceManager::GetMesh("./test_models/Dragon_80K.obj");
     // tmod->mat = BiBuild::ResourceManager::GetMaterial("ground");
     tmod->mat = BiBuild::ResourceManager::GetMaterial("point");
 
