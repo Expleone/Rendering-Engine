@@ -49,8 +49,8 @@ namespace BiBuild {
 
         glFrontFace(GL_CCW);
 
-        // glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 
         Get().defaultShader = ResourceManager::LoadShaderProgram("default", "./shaders/vertex/base.vert", "./shaders/fragment/base.frag");
@@ -134,23 +134,28 @@ namespace BiBuild {
             SceneObject* obj = objPtr.get();
             if (!obj || obj->name == "Skybox") continue;
 
-            auto* model_comp = obj->GetComponent<ModelComponent>();
-            if (!model_comp || !model_comp->mesh) continue;
+            std::vector<ModelComponent*> models = obj->GetAllComponents<ModelComponent>();
 
-            auto* material = model_comp->mat;
+            for (auto& model_comp : models) {
+                if (!model_comp || !model_comp->mesh) continue;
 
-            ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
+                auto* material = model_comp->mat;
 
-            if (activeShader != targetShader) {
-                targetShader->Use();
-                activeShader = targetShader;
+                ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
+
+                if (activeShader != targetShader) {
+                    targetShader->Use();
+                    activeShader = targetShader;
+                }
+                //Send additional uniforms to shaders
+                targetShader->SendAdditionalInfo();
+                // targetShader->SetUniformFloat()
+                model_comp->Draw(targetShader);
+
+                Get().drawCallsLastFrame++;
             }
-            //Send additional uniforms to shaders
-            targetShader->SendAdditionalInfo();
-            // targetShader->SetUniformFloat()
-            model_comp->Draw(targetShader);
+            // auto* model_comp = obj->GetComponent<ModelComponent>();
 
-            Get().drawCallsLastFrame++;
         }
 
     }

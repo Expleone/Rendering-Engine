@@ -17,6 +17,12 @@ class ModelLoadGUI {
     static std::string filepath;
     static float scale;
     static float oldScale;
+
+    const float dimFactor = 0.2f;
+
+
+
+
 public:
     static void draw(SceneObject* obj) {
         ImGui::Begin("Load Model");
@@ -38,12 +44,36 @@ public:
         ImGui::End();
     }
 
-    static void loadModel(SceneObject* obj, std::string& filepath) {
-        auto model = obj->GetComponent<ModelComponent>();
-        auto newMesh = ResourceManager::GetMesh(filepath);
-        if (!newMesh) return;
+    static std::vector<BiBuild::Material*> GetWhitishMaterials() {
+        std::vector<BiBuild::Material*> materials(7);
+
+        materials[0] = BiBuild::ResourceManager::GetMaterial("WhitishBlue");
+        materials[1] = BiBuild::ResourceManager::GetMaterial("WhitishPurple");
+        materials[2] = BiBuild::ResourceManager::GetMaterial("WhitishGreen");
+        materials[3] = BiBuild::ResourceManager::GetMaterial("WhitishPink");
+        materials[4] = BiBuild::ResourceManager::GetMaterial("WhitishYellow");
+        materials[5] = BiBuild::ResourceManager::GetMaterial("WhitishRed");
+        materials[6] = BiBuild::ResourceManager::GetMaterial("WhitishCyan");
+
+        return materials;
+    }
+
+    static void loadModel(SceneObject* obj, const std::string& newFilepath) {
+
+        auto newMeshes = ResourceManager::LoadMeshesFromFile(newFilepath);
+        if (newMeshes.empty()) return;
+        auto mats = GetWhitishMaterials();
+        obj->DeleteAllComponents<ModelComponent>();
+        int i = 7;
+        for (auto mesh : newMeshes) {
+            auto model = obj->AddComponent<ModelComponent>();
+            model->mesh = mesh;
+            if (i != 7) model->mat = mats[i];
+            i--;
+            if (i <= 0) i = 7;
+        }
         scale = 1;
-        model->mesh = newMesh;
+        filepath = newFilepath;
     }
 };
 

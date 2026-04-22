@@ -37,6 +37,11 @@ namespace BiBuild {
         template <typename T>
         T* GetComponent() const;
 
+        template <typename T>
+        std::vector<T*> GetAllComponents() const;
+
+        template <typename T>
+        void DeleteAllComponents() ;
 
         template <typename T>
         T* AddScript();
@@ -63,6 +68,28 @@ namespace BiBuild {
             }
         }
         return nullptr;
+    }
+
+    template <typename T>
+    std::vector<T*> SceneObject::GetAllComponents()  const {
+        std::vector<T*> componentList;
+        for (const auto& comp : components) {
+            if (T* casted = dynamic_cast<T*>(comp.get())) {
+                componentList.push_back(casted);
+            }
+        }
+        return componentList;
+    }
+
+    template <typename T>
+    void SceneObject::DeleteAllComponents() {
+        components.erase(
+            std::remove_if(components.begin(), components.end(),
+                [](const std::unique_ptr<Component>& comp) {
+                    return dynamic_cast<T*>(comp.get()) != nullptr;
+                }),
+            components.end()
+        );
     }
 
     template <typename T>
