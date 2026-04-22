@@ -45,7 +45,6 @@ namespace BiBuild {
 
         static glm::vec3 GetForwardFromYawPitch(float yawDegrees, float pitchDegrees);
         glm::mat4 BuildCameraViewMatrix() const;
-        void UpdateCameraFromInput(float deltaTime);
     };
 }
 

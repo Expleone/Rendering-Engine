@@ -65,7 +65,6 @@ namespace BiBuild {
         sunlight->diffuse = glm::vec3(0.9f, 0.9f, 0.8f);
         sunlight->specular = glm::vec3(1.0f, 1.0f, 1.0f);
         sunlight->direction = glm::vec3(0, -1.0f, 0);
-
         obj->AddScript<SkyboxScript>();
 
         SceneObject* ptr = obj.get();

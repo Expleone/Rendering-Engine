@@ -37,7 +37,7 @@ namespace BiBuild {
 
     struct AdditionalShaderInfo {
         std::string uniformName;
-        void* infoPtr = nullptr;
+        const void* infoPtr = nullptr;
         UniformType type = UniformType::Integer;
     };
 
@@ -110,19 +110,19 @@ namespace BiBuild {
                 
                 switch (info.type) {
                     case UniformType::Integer:
-                        SetUniformInt(info.uniformName.c_str(), *static_cast<int*>(info.infoPtr));
+                        SetUniformInt(info.uniformName.c_str(), *static_cast<const int*>(info.infoPtr));
                         break;
                     case UniformType::Vec3:
-                        SetUniformVec3(info.uniformName.c_str(), *static_cast<glm::vec3*>(info.infoPtr));
+                        SetUniformVec3(info.uniformName.c_str(), *static_cast<const glm::vec3*>(info.infoPtr));
                         break;
                     case UniformType::Float:
-                        SetUniformFloat(info.uniformName.c_str(), *static_cast<float*>(info.infoPtr));
+                        SetUniformFloat(info.uniformName.c_str(), *static_cast<const float*>(info.infoPtr));
                         break;
                 }
             }
         }
 
-        void AddInfo(const std::string& name, void* ptr, const UniformType type) {
+        void AddInfo(const std::string& name, const void* ptr, const UniformType type) {
             shaderInfo.push_back({name, ptr, type});
         }
 

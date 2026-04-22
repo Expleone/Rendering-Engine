@@ -21,7 +21,9 @@
 #include "core/ResourceManager.h"
 #include "test_models/birds.h"
 #include "./test_models/cube.h"
+#include "core/Time.h"
 #include "gui/ModelLoadGUI.h"
+#include "ObjectScripts/CameraScript.h"
 
 const int WIN_WIDTH  = 800;
 const int WIN_HEIGHT = 600;
@@ -29,7 +31,6 @@ const char* WIN_TITLE  = "GLFW & ImGui - Shaders data";
 
 const int animFrameTimeMs = 150;
 
-static float GlobalTime = 0;
 static glm::vec3 windDir = glm::vec3(1,0,1);
 static float windStrength = 1;
 static float windSpeed = 1;
@@ -90,7 +91,7 @@ int main() {
     vegetationShader->AddInfo("windDir", &windDir, BiBuild::UniformType::Vec3);
     vegetationShader->AddInfo("windStrength", &windStrength, BiBuild::UniformType::Float);
     vegetationShader->AddInfo("windSpeed", &windSpeed, BiBuild::UniformType::Float);
-    vegetationShader->AddInfo("time", &GlobalTime, BiBuild::UniformType::Float);
+    vegetationShader->AddInfo("time", BiBuild::Time::fCurrentTimePointer(), BiBuild::UniformType::Float);
 
 
     BiBuild::RenderSystem::Initialize(window, WIN_WIDTH,WIN_HEIGHT, scene.cameraObject);
@@ -145,6 +146,7 @@ int main() {
         glfwTerminate();
         return -1;
     }
+    scene.cameraObject->AddScript<BiBuild::CameraScript>();
     scene.cameraObject->transform->localPosition = glm::vec3(0.0f, 00.0f, 10.0f);
 
 
@@ -284,15 +286,17 @@ int main() {
     int framen = 0;
     // Main loop
     while (!glfwWindowShouldClose(window)) {
+        BiBuild::Time::UpdateTime();
+        // std::cout << BiBuild::Time::DeltaTime();
         glfwPollEvents();
 
         float currentFrameTime = static_cast<float>(glfwGetTime());
         float deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
 
-        if (!ImGui::GetIO().WantCaptureKeyboard) {
-            camera->UpdateCameraFromInput(deltaTime);
-        }
+        // if (!ImGui::GetIO().WantCaptureKeyboard) {
+        //     camera->UpdateCameraFromInput(deltaTime);
+        // }
         scene.UpdateScene();
 
         if (++framen/60 >= birds_data.nAnimFrames) {
@@ -325,7 +329,6 @@ int main() {
         ImGui::End();
 
         BiBuild::ModelLoadGUI::draw(test);
-        GlobalTime = static_cast<float>(glfwGetTime());
 
         ImGui::Begin("Scene Objects");
 
