@@ -15,8 +15,8 @@ namespace BiBuild {
 
 class SkyboxScript : public ObjectScript {
     double startTime;
-    double prevTime;
-    double coefficient = glm::pi<double>()/300;
+    double prevTime{};
+    double coefficient = 1;//glm::pi<double>()/300;
     LightComponent* sunlight;
 public:
     glm::vec3 sunPos{};

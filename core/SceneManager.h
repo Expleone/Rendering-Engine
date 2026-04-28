@@ -4,6 +4,7 @@
 
 #ifndef VIEWER_SCENEMANAGER_H
 #define VIEWER_SCENEMANAGER_H
+#include <map>
 #include <memory>
 #include <vector>
 #include "SceneObject.h"
@@ -21,6 +22,7 @@ namespace BiBuild {
 
     public:
         std::vector<std::unique_ptr<SceneObject>> objects;
+        std::unordered_map<uuids::uuid, SceneObject*> objects_bi_ids;
         SceneManager();
         SceneObject* cameraObject = nullptr;
         SceneObject* skybox = nullptr;

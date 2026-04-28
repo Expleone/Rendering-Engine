@@ -137,6 +137,8 @@ add_executable(viewer main.cpp test_models/birds.c
         ObjectScripts/CameraScript.h
         core/Time.cpp
         core/Time.h
+        core/FrameBuffer.cpp
+        core/FrameBuffer.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c

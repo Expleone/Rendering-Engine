@@ -73,6 +73,9 @@ namespace BiBuild {
         void SetUniformVec4(const char* name, const glm::vec4& vector) const {
             glUniform4fv(GetUniformLocation(name), 1, glm::value_ptr(vector));
         }
+        void SetUniformVec4ui(const char* name, const int v0, const int v1, const int v2, const int v3) const {
+            glUniform4ui(GetUniformLocation(name), v0, v1, v2, v3);
+        }
 
         void SetUniformInt(const char* name, int value) const {
             glUniform1i(GetUniformLocation(name), value);

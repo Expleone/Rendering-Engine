@@ -24,6 +24,7 @@ namespace BiBuild {
     public:
         Mesh* mesh = nullptr;
         Material* mat = nullptr;
+        bool isClickable = false;
         ModelComponent(SceneObject* owner) : Component(owner){}
 
         void Draw(ShaderProgram* shader) {

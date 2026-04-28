@@ -54,9 +54,11 @@ namespace BiBuild {
 
 
         Get().defaultShader = ResourceManager::LoadShaderProgram("default", "./shaders/vertex/base.vert", "./shaders/fragment/base.frag");
+        Get().uuidShader = ResourceManager::LoadShaderProgram("uuid", "./shaders/vertex/uuid.vert", "./shaders/fragment/uuid.frag");
         Get().matricesUBO = new UniformBuffer(sizeof(glm::mat4) * 2, static_cast<GLuint>(UBOBinding::Matrices));
         Get().lightsUBO = new UniformBuffer(sizeof(LightsUBOStructure), static_cast<GLuint>(UBOBinding::Lights));
         Get().fogUBO = new UniformBuffer(sizeof(FogUBOStructure), static_cast<GLuint>(UBOBinding::Fog));
+        Get().uuidFBO = new FrameBuffer(width, height, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT);
     }
 
     RenderSystem::~RenderSystem() = default;
@@ -156,13 +158,55 @@ namespace BiBuild {
     }
 
 
+    void RenderSystem::DrawIDs(const SceneManager& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+        // std::vector<std::unique_ptr<SceneObject>> sceneObjects = scene.objects;
+
+
+        if (!Get().uuidShader || !Get().uuidFBO) {
+            std::cerr << "Error: UUIDs can't be drawn" << std::endl;
+            return;
+        }
+
+        Get().uuidFBO->Bind();
+        Get().uuidShader->Use();
+        GLuint clearColor[4] = {0, 0, 0, 0};
+        glClearBufferuiv(GL_COLOR, 0, clearColor);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+
+        struct UniformBlock {
+            glm::mat4 view;
+            glm::mat4 projection;
+        } uboData{ viewMatrix, projectionMatrix };
+
+        Get().matricesUBO->UpdateSubData(&uboData, sizeof(uboData), 0);
+
+        for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
+            SceneObject* obj = objPtr.get();
+            if (!obj || obj->name == "Skybox") continue;
+
+            auto* model_comp = obj->GetComponent<ModelComponent>();
+            if (!model_comp || !model_comp->mesh) continue;
+            uint32_t uuid_parts[4];
+            auto bytes = obj->uuid.as_bytes();
+            std::memcpy(uuid_parts, bytes.data(), 16);
+            Get().uuidShader->SetUniformVec4ui("uuid", uuid_parts[0], uuid_parts[1], uuid_parts[2], uuid_parts[3]);
+            model_comp->Draw(Get().uuidShader);
+        }
+        Get().uuidFBO->Unbind();
+
+    }
+
+
     void RenderSystem::OnWindowResize(GLFWwindow* window, int  width, int height) {
         screenWidth = width;
         screenHeight = height;
+        uuidFBO->OnResize(width, height);
         glViewport(0, 0, screenWidth, screenHeight);
         if (camera) {
             camera->aspectRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
         }
+
 
     }
 
@@ -217,6 +261,50 @@ namespace BiBuild {
 
     FogUBOStructure RenderSystem::GetFogSettings() {
         return Get().fogUBOStruct;
+    }
+
+    FrameBuffer *RenderSystem::GetUUIDFrameBuffer() {
+        return Get().uuidFBO;
+    }
+
+
+    //For debug purposes
+    void RenderSystem::DrawFullscreenQuad(GLuint textureID) {
+        auto shaderProgram = ResourceManager::LoadShaderProgram("debugFrameBuffer", "./shaders/vertex/debugframebuffer.vert", "./shaders/fragment/debugframebuffer.frag");
+        static GLuint vao = 0;
+        if (vao == 0) {
+            float quadVertices[] = {
+                // positions   // texCoords
+                -1.0f,  1.0f,  0.0f, 1.0f,
+                -1.0f, -1.0f,  0.0f, 0.0f,
+                 1.0f, -1.0f,  1.0f, 0.0f,
+                -1.0f,  1.0f,  0.0f, 1.0f,
+                 1.0f, -1.0f,  1.0f, 0.0f,
+                 1.0f,  1.0f,  1.0f, 1.0f
+            };
+            GLuint vbo;
+            glGenVertexArrays(1, &vao);
+            glGenBuffers(1, &vbo);
+            glBindVertexArray(vao);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shaderProgram->Use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        shaderProgram->SetUniformInt("fboTexture", 0);
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
     }
 
 } // BiBuild

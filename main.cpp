@@ -186,7 +186,7 @@ int main() {
     auto* pointModel = pointObj->AddComponent<BiBuild::ModelComponent>();
     pointModel->mesh = BiBuild::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
     auto* pointMaterial = BiBuild::ResourceManager::CreateMaterial("point");
-    pointMaterial->ambient   = glm::vec4(0.0f); // No self-illumination
+    pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
     pointMaterial->diffuse   = glm::vec4(glm::vec3(0), 1); //
     pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
     pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
@@ -282,7 +282,7 @@ int main() {
     // tmod->mat = BiBuild::ResourceManager::GetMaterial("ground");
     tmod->mat = BiBuild::ResourceManager::GetMaterial("point");
 
-    float lastFrameTime = static_cast<float>(glfwGetTime());
+
     int framen = 0;
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -290,9 +290,6 @@ int main() {
         // std::cout << BiBuild::Time::DeltaTime();
         glfwPollEvents();
 
-        float currentFrameTime = static_cast<float>(glfwGetTime());
-        float deltaTime = currentFrameTime - lastFrameTime;
-        lastFrameTime = currentFrameTime;
 
         // if (!ImGui::GetIO().WantCaptureKeyboard) {
         //     camera->UpdateCameraFromInput(deltaTime);
@@ -310,7 +307,11 @@ int main() {
             camera->BuildCameraViewMatrix(),
             camera->GetProjectionMat()
         );
-
+        BiBuild::RenderSystem::DrawIDs(scene,
+            camera->BuildCameraViewMatrix(),
+            camera->GetProjectionMat()
+        );
+        // BiBuild::RenderSystem::DrawFullscreenQuad(BiBuild::RenderSystem::GetUUIDFrameBuffer()->GetTexture());
 
 
         // Start ImGui frame

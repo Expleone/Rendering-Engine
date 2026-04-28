@@ -23,6 +23,7 @@ namespace BiBuild {
         uuids::uuid uuid;
         std::string name;
         TransformComponent* transform;
+        bool hasClickableParts;
 
         std::vector<std::unique_ptr<Component>> components;
         std::vector<std::unique_ptr<ObjectScript>> scripts;

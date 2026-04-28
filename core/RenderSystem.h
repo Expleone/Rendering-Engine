@@ -22,6 +22,7 @@
 #include "ShaderProgram.h"
 #include "UniformBuffer.h"
 #include "../components/CameraComponent.h"
+#include "FrameBuffer.h"
 
 namespace BiBuild {
     class SceneObject;
@@ -62,11 +63,16 @@ namespace BiBuild {
         FogUBOStructure fogUBOStruct{glm::vec4(0), 100, 300,  0};
         Texture* fogTex = nullptr;
 
+        FrameBuffer* uuidFBO = nullptr;
+        ShaderProgram* uuidShader = nullptr;
+
+
         // unsigned int gridVAO = 0, gridVBO = 0; // For drawing the 3D floor grid
         int screenWidth = 0, screenHeight = 0;
 
         static RenderSystem& Get() {
             static RenderSystem instance;
+
             return instance;
         }
         RenderSystem() = default;
@@ -84,6 +90,7 @@ namespace BiBuild {
         static void Initialize(GLFWwindow *window, int width, int height, SceneObject *cameraObject);
 
         static void UpdateAndDraw(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
+        static void DrawIDs(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
         static ShaderProgram* GetDefaultShader();
         static void SetDefaultShader(ShaderProgram* prg);
         static void SetFogTexture(Texture* tex);
@@ -96,6 +103,8 @@ namespace BiBuild {
         static void SetFogDistance(float distanceClose, float distanceFar);
         static void SetFogUseTex(bool useTex);
         static FogUBOStructure GetFogSettings();
+        static FrameBuffer* GetUUIDFrameBuffer();
+        static void DrawFullscreenQuad(GLuint textureID);
     };
 
 } // BiBuild
