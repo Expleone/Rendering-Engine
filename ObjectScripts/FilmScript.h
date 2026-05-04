@@ -73,7 +73,7 @@ namespace BiBuild {
 
             model->mesh = ResourceManager::LoadMesh("screen", "test_models/quad.obj");
             model->mat = ResourceManager::CreateMaterial("Video");
-            tex = ResourceManager::CreateTexture("videoTexture", TexType::Tex2D, context.width, context.height, true);
+        tex = ResourceManager::CreateTexture("videoTexture", TexType::Tex2D, context.width, context.height, true, GL_RGBA);
             model->mat->textures.push_back(tex);
             model->mat->shader =BiBuild::ResourceManager::LoadShaderProgram("screen_shader", "./shaders/vertex/base.vert", "./shaders/fragment/screen.frag");
         }

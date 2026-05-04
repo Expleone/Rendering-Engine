@@ -8,19 +8,19 @@
 
 namespace BiBuild {
     void Material::SendToShader(ShaderProgram* shaderProgram) const {
-
-        auto fogTex = RenderSystem::GetFogTexture();
-        GLuint textureUnit = 0;
-        int tex2DCount = 0;
-
         if (shaderProgram) {
             shaderProgram->Use();
+            SendAdditionalInfo(shaderProgram);
             shaderProgram->SetUniformVec3("material.ambient", ambient);
             shaderProgram->SetUniformVec4("material.diffuse", diffuse);
             shaderProgram->SetUniformVec3("material.specular", specular);
             shaderProgram->SetUniformVec3("material.emission", emission);
             shaderProgram->SetUniformFloat("material.shininess", shininess);
         }
+
+        auto fogTex = RenderSystem::GetFogTexture();
+        GLuint textureUnit = 0;
+        int tex2DCount = 0;
 
 
         for (size_t i = 0; i < textures.size(); ++i) {

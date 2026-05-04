@@ -138,24 +138,28 @@ namespace BiBuild {
         // 3. Render all other objects
         for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             SceneObject* obj = objPtr.get();
-            if (!obj || obj->name == "Skybox") continue;
+            if (!obj || obj->name == "Skybox" || !obj->render) continue;
 
-            auto* model_comp = obj->GetComponent<ModelComponent>();
-            if (!model_comp || !model_comp->mesh) continue;
+            std::vector<ModelComponent*> models = obj->GetAllComponents<ModelComponent>();
 
-            auto* material = model_comp->mat;
-            ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
+            for (auto& model_comp : models) {
+                if (!model_comp || !model_comp->mesh) continue;
 
-            if (activeShader != targetShader) {
-                targetShader->Use();
-                activeShader = targetShader;
+                auto* material = model_comp->mat;
+
+                ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
+
+                if (activeShader != targetShader) {
+                    targetShader->Use();
+                    activeShader = targetShader;
+                }
+                //Send additional uniforms to shaders
+                targetShader->SendAdditionalInfo();
+                // targetShader->SetUniformFloat()
+                model_comp->Draw(targetShader);
+
+                Get().drawCallsLastFrame++;
             }
-            //Send additional uniforms to shaders
-            targetShader->SendAdditionalInfo();
-            // targetShader->SetUniformFloat()
-            model_comp->Draw(targetShader);
-
-            Get().drawCallsLastFrame++;
         }
 
     }
@@ -186,7 +190,7 @@ namespace BiBuild {
 
         for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             SceneObject* obj = objPtr.get();
-            if (!obj || obj->name == "Skybox" || !obj->hasClickableParts) continue;
+            if (!obj || obj->name == "Skybox" || !obj->render || !obj->hasClickableParts) continue;
 
             auto* model_comp = obj->GetComponent<ModelComponent>();
             if (!model_comp || !model_comp->mesh || !model_comp->drawUUID) continue;

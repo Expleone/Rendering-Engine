@@ -32,6 +32,7 @@ namespace BiBuild {
     enum class UniformType {
         Integer,
         Vec3,
+        Vec2,
         Float,
     };
 
@@ -65,6 +66,9 @@ namespace BiBuild {
 
         void SetUniformMat4(const char* name, glm::mat4& mat) const {
             glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat));
+        }
+        void SetUniformVec2(const char* name, const glm::vec2& vector) const {
+            glUniform2fv(GetUniformLocation(name), 1, glm::value_ptr(vector));
         }
 
         void SetUniformVec3(const char* name, const glm::vec3& vector) const {
@@ -110,13 +114,16 @@ namespace BiBuild {
                 if (!info.infoPtr) {
                     continue;
                 }
-                
+
                 switch (info.type) {
                     case UniformType::Integer:
                         SetUniformInt(info.uniformName.c_str(), *static_cast<const int*>(info.infoPtr));
                         break;
                     case UniformType::Vec3:
                         SetUniformVec3(info.uniformName.c_str(), *static_cast<const glm::vec3*>(info.infoPtr));
+                        break;
+                    case UniformType::Vec2:
+                        SetUniformVec2(info.uniformName.c_str(), *static_cast<const glm::vec2*>(info.infoPtr));
                         break;
                     case UniformType::Float:
                         SetUniformFloat(info.uniformName.c_str(), *static_cast<const float*>(info.infoPtr));

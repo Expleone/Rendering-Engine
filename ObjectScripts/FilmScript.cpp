@@ -14,7 +14,7 @@ namespace BiBuild {
         if (context.newFrameReady) {
             context.mutex.lock();
 
-            tex->UpdateTexture(context.pixels, context.width, context.height);
+            tex->UpdateTexture(context.pixels, context.width, context.height, GL_RGBA);
 
             int max_dim = std::max(context.width, context.height);
             int lowest_mip_level = static_cast<int>(std::floor(std::log2(max_dim)));

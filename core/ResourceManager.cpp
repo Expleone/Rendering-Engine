@@ -30,8 +30,8 @@ namespace BiBuild {
         return texPtr;
     }
 
-    Texture *ResourceManager::CreateTexture(const std::string& name, TexType type, int width, int height, bool mipmap) {
-        auto texture = std::make_unique<Texture>(type, width, height, mipmap);
+    Texture *ResourceManager::CreateTexture(const std::string& name, TexType type, int width, int height, bool mipmap, GLuint format) {
+        auto texture = std::make_unique<Texture>(type, width, height, mipmap, format);
         auto* texPtr = texture.get();
         Get().textures.emplace(name, std::move(texture));
         return texPtr;

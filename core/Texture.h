@@ -122,7 +122,7 @@ public:
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     }
 
-    Texture(TexType texType, int width, int height, bool mipmap) : texId(0), type(texType), mipmap(mipmap) {
+    Texture(TexType texType, int width, int height, bool mipmap, GLuint format) : texId(0), type(texType), mipmap(mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -131,14 +131,14 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void UpdateTexture(void* data, int width, int height) const {
+    void UpdateTexture(void* data, int width, int height, GLuint format) const {
         glBindTexture(GL_TEXTURE_2D, texId);
 
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,format, GL_UNSIGNED_BYTE, data);
 
         glGenerateMipmap(GL_TEXTURE_2D);
 

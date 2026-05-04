@@ -184,8 +184,10 @@ add_executable(viewer main.cpp test_models/birds.c
         ObjectScripts/FilmScript.h
         core/Curve.cpp
         core/Curve.h
-        core/TextCreartor.cpp
-        core/TextCreartor.h
+        core/TextGenerator.cpp
+        core/TextGenerator.h
+        ObjectScripts/TextScript.cpp
+        ObjectScripts/TextScript.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c

@@ -21,6 +21,7 @@
 #include "core/ResourceManager.h"
 #include "test_models/birds.h"
 #include "./test_models/cube.h"
+#include "core/TextGenerator.h"
 #include "core/Time.h"
 #include "gui/ModelLoadGUI.h"
 #include "ObjectScripts/CameraScript.h"
@@ -151,6 +152,7 @@ int main() {
     BiBuild::RenderSystem::Initialize(window, WIN_WIDTH,WIN_HEIGHT, scene.cameraObject);
     // Callbacks setup
     BiBuild::InputManager::Init(window);
+    BiBuild::TextGenerator::Init("resources/fonts/arial/ARIAL.TTF");
     for (auto& action : stdActions) {
         BiBuild::InputManager::RegisterAction(action.first, action.second);
     }
@@ -213,7 +215,10 @@ int main() {
     screen->hasClickableParts = true;
     filmScript->SetVideo("./test_models/video.mp4");
 
-
+    auto text = scene.CreateObject("Text");
+    std::string testText("j AM a text \"LOL\"");
+    BiBuild::TextGenerator::CreateText(text, testText, BiBuild::ResourceManager::LoadTexture("./test_models/rocks/gray_rocks.png"), 6);
+    text->transform->localScale = glm::vec3(0.01f, 0.01f, 0.01f);
 
 
     // 2. Load the mesh

@@ -26,7 +26,7 @@ public:
         sunlight = owner->GetComponent<LightComponent>();
         auto model = owner->GetComponent<ModelComponent>();
         if (model && model->mat && model->mat->shader)
-            model->mat->shader->AddInfo("sunPos", &sunPos, UniformType::Vec3);
+            model->mat->AddInfo("sunPos", &sunPos, UniformType::Vec3);
     }
     void Update() override;
 };
