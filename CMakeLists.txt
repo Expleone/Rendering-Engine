@@ -3,6 +3,8 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 project(Viewer)
 
 include(FetchContent)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # --- GLAD (OpenGL Loader) ---
 FetchContent_Declare(
@@ -83,10 +85,43 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
-find_package(PkgConfig REQUIRED)
+if(WIN32)
+    # Fetch precompiled VLC Windows SDK directly from VideoLAN
+    FetchContent_Declare(
+            vlc_sdk
+            URL https://download.videolan.org/pub/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.zip
+    )
+    FetchContent_MakeAvailable(vlc_sdk)
 
-# Use PkgConfig to find libvlc
-pkg_check_modules(VLC REQUIRED libvlc)
+    set(VLC_INCLUDE_DIRS ${vlc_sdk_SOURCE_DIR}/sdk/include)
+    set(VLC_LIBRARY_DIRS ${vlc_sdk_SOURCE_DIR}/sdk/lib)
+    set(VLC_LIBRARIES libvlc libvlccore)
+
+    # Automatically copy the required DLLs to the build directory so the executable can run
+    file(GLOB VLC_DLLS "${vlc_sdk_SOURCE_DIR}/*.dll")
+    file(COPY ${VLC_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
+
+    # Also copy the plugins folder which VLC requires at runtime
+    file(COPY "${vlc_sdk_SOURCE_DIR}/plugins" DESTINATION ${CMAKE_BINARY_DIR})
+else()
+    # UNIX platforms: Precompiled binaries are highly volatile due to glibc/framework variations.
+    # Package managers or PkgConfig remain the required standard.
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(VLC REQUIRED libvlc)
+endif()
+
+set(FT_DISABLE_ZLIB ON CACHE BOOL "Disable ZLIB")
+set(FT_DISABLE_BZIP2 ON CACHE BOOL "Disable BZIP2")
+set(FT_DISABLE_PNG ON CACHE BOOL "Disable PNG")
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "Disable HarfBuzz")
+set(FT_DISABLE_BROTLI ON CACHE BOOL "Disable Brotli")
+
+FetchContent_Declare(
+        freetype
+        GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+        GIT_TAG        VER-2-13-2 # Specify the desired release tag
+)
+FetchContent_MakeAvailable(freetype)
 
 # --- Основний проект ---
 add_executable(viewer main.cpp test_models/birds.c
@@ -131,7 +166,6 @@ add_executable(viewer main.cpp test_models/birds.c
         core/Material.cpp
         core/Material.h
         core/stb_image.cpp
-        core/stb_image.cpp
         gui/ModelLoadGUI.cpp
         gui/ModelLoadGUI.h
         ObjectScripts/ObjectScript.cpp
@@ -170,6 +204,7 @@ target_link_libraries(viewer PRIVATE
         stduuid
         assimp
         ${VLC_LIBRARIES}
+        freetype
 )
 
 
