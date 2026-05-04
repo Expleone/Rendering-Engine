@@ -29,7 +29,7 @@ namespace BiBuild::Helper {
             return file_contents;
         }
 
-        std::cout << file_contents << std::endl;
+        // std::cout << file_contents << std::endl;
 
         return file_contents;
     }

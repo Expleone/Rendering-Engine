@@ -30,6 +30,13 @@ namespace BiBuild {
         return texPtr;
     }
 
+    Texture *ResourceManager::CreateTexture(const std::string& name, TexType type, int width, int height, bool mipmap) {
+        auto texture = std::make_unique<Texture>(type, width, height, mipmap);
+        auto* texPtr = texture.get();
+        Get().textures.emplace(name, std::move(texture));
+        return texPtr;
+    }
+
     Texture* ResourceManager::LoadTextureCubeMap(const std::vector<std::string> &faces) {
         std::string key = "cube:";
         for (const std::string& face : faces) {
@@ -160,6 +167,16 @@ namespace BiBuild {
         std::vector<unsigned int> indexData(indices, indices + iSize);
 
         return LoadMesh(name, vertexData, indexData);
+    }
+
+    Mesh* ResourceManager::LoadMesh(const std::string& name, const std::string& filepath) {
+        auto meshes = LoadMeshesFromFile(filepath);
+        if (meshes.empty()) {
+            return nullptr;
+        }
+
+        meshes.front()->name = name;
+        return meshes.front();
     }
 
     Mesh* ResourceManager::GetMesh(const std::string &name){

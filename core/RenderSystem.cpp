@@ -6,6 +6,9 @@
 
 #include "Mesh.h"
 #include "../components/LightComponent.h"
+#include <uuid.h>
+#include <array>
+#include <cstring>
 
 
 namespace BiBuild {
@@ -64,8 +67,9 @@ namespace BiBuild {
     RenderSystem::~RenderSystem() = default;
 
 
-    void RenderSystem::UpdateAndDraw(const SceneManager& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    void RenderSystem::UpdateAndDraw(SceneManager& scene, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
         // std::vector<std::unique_ptr<SceneObject>> sceneObjects = scene.objects;
+        Get().currentScene = &scene;
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (!Get().defaultShader) {
@@ -140,7 +144,6 @@ namespace BiBuild {
             if (!model_comp || !model_comp->mesh) continue;
 
             auto* material = model_comp->mat;
-
             ShaderProgram* targetShader = (material!=nullptr && material->shader != nullptr) ? material->shader : Get().defaultShader;
 
             if (activeShader != targetShader) {
@@ -183,10 +186,10 @@ namespace BiBuild {
 
         for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             SceneObject* obj = objPtr.get();
-            if (!obj || obj->name == "Skybox") continue;
+            if (!obj || obj->name == "Skybox" || !obj->hasClickableParts) continue;
 
             auto* model_comp = obj->GetComponent<ModelComponent>();
-            if (!model_comp || !model_comp->mesh) continue;
+            if (!model_comp || !model_comp->mesh || !model_comp->drawUUID) continue;
             uint32_t uuid_parts[4];
             auto bytes = obj->uuid.as_bytes();
             std::memcpy(uuid_parts, bytes.data(), 16);
@@ -194,9 +197,27 @@ namespace BiBuild {
             model_comp->Draw(Get().uuidShader);
         }
         Get().uuidFBO->Unbind();
-
     }
 
+    SceneObject *RenderSystem::GetObjectFromScreen(int mx, int my) {
+        if (!Get().currentScene) {
+            return nullptr;
+        }
+
+        my = Get().screenHeight - my;
+        Get().uuidFBO->Bind();
+        uint32_t read_parts[4];
+
+        glReadPixels(mx, my, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_INT, read_parts);
+
+        std::array<unsigned char, 16> reconstructed_bytes = {};
+        std::memcpy(reconstructed_bytes.data(), read_parts, 16);
+
+        uuids::uuid reconstructed_id = uuids::uuid(reconstructed_bytes.begin(), reconstructed_bytes.end());
+        Get().uuidFBO->Unbind();
+
+        return Get().currentScene->GetObject(reconstructed_id);
+    }
 
     void RenderSystem::OnWindowResize(GLFWwindow* window, int  width, int height) {
         screenWidth = width;

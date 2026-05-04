@@ -21,11 +21,11 @@ namespace BiBuild {
 
 
 class Texture {
-    GLuint texId;
-    TexType type;
+    GLuint texId = 0;
+    TexType type = TexType::Tex2D;
+    bool mipmap = false;
 public:
-    Texture(const std::string& filepath, bool mipmap) {
-        type = TexType::Tex2D;
+    Texture(const std::string& filepath, bool mipmap) : texId(0), type(TexType::Tex2D), mipmap(mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -43,7 +43,7 @@ public:
             else if (nrChannels == 3) format = GL_RGB;
             else if (nrChannels == 4) format = GL_RGBA;
 
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
             if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
         } else {
             std::cout << "Failed to load texture at path: " << filepath << std::endl;
@@ -56,8 +56,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    Texture(const std::string& filepath, bool mipmap, GLint wrapMode, GLint filterMode) {
-        type = TexType::Tex2D;
+    Texture(const std::string& filepath, bool mipmap, GLint wrapMode, GLint filterMode) : texId(0), type(TexType::Tex2D), mipmap(mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapMode);
@@ -75,7 +74,7 @@ public:
             else if (nrChannels == 3) format = GL_RGB;
             else if (nrChannels == 4) format = GL_RGBA;
 
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
             if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
         } else {
             std::cout << "Failed to load texture at path: " << filepath << std::endl;
@@ -88,8 +87,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    Texture(const std::vector<std::string>& faces, const bool mipmap) {
-        type = TexType::CubeMap;
+    Texture(const std::vector<std::string>& faces, const bool mipmap) : texId(0), type(TexType::CubeMap), mipmap(mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
 
@@ -103,7 +101,7 @@ public:
                 else if (nrChannels == 3) format = GL_RGB;
                 else if (nrChannels == 4) format = GL_RGBA;
 
-                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
             } else {
                 std::cout << "Failed to load texture at path: " << face << std::endl;
@@ -122,6 +120,29 @@ public:
         if (mipmap) glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    }
+
+    Texture(TexType texType, int width, int height, bool mipmap) : texId(0), type(texType), mipmap(mipmap) {
+        glGenTextures(1, &texId);
+        glBindTexture(GL_TEXTURE_2D, texId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    void UpdateTexture(void* data, int width, int height) const {
+        glBindTexture(GL_TEXTURE_2D, texId);
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
 

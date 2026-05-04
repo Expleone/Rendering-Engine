@@ -22,13 +22,14 @@ namespace BiBuild {
 
     public:
         std::vector<std::unique_ptr<SceneObject>> objects;
-        std::unordered_map<uuids::uuid, SceneObject*> objects_bi_ids;
+        std::unordered_map<uuids::uuid, SceneObject*> objects_by_ids;
         SceneManager();
         SceneObject* cameraObject = nullptr;
         SceneObject* skybox = nullptr;
         [[nodiscard]] SceneObject* GetRoot() const;
 
         SceneObject* CreateObject(const std::string& name);
+        SceneObject* GetObject(const uuids::uuid id);
         SceneObject* CreateSkyBox(const std::vector<std::string>& faces);
         void ChangeSkyBox(const std::vector<std::string>& faces);
         void ApplySceneSettings();

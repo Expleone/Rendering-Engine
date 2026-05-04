@@ -83,6 +83,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
+find_package(PkgConfig REQUIRED)
+
+# Use PkgConfig to find libvlc
+pkg_check_modules(VLC REQUIRED libvlc)
+
 # --- Основний проект ---
 add_executable(viewer main.cpp test_models/birds.c
         core/InputHandler.cpp
@@ -139,6 +144,14 @@ add_executable(viewer main.cpp test_models/birds.c
         core/Time.h
         core/FrameBuffer.cpp
         core/FrameBuffer.h
+        ObjectScripts/OutlineScript.cpp
+        ObjectScripts/OutlineScript.h
+        ObjectScripts/FilmScript.cpp
+        ObjectScripts/FilmScript.h
+        core/Curve.cpp
+        core/Curve.h
+        core/TextCreartor.cpp
+        core/TextCreartor.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c
@@ -156,9 +169,15 @@ target_link_libraries(viewer PRIVATE
         OpenGL::GL
         stduuid
         assimp
+        ${VLC_LIBRARIES}
 )
 
-target_include_directories(viewer PRIVATE ${stb_SOURCE_DIR})
+
+
+target_include_directories(viewer PRIVATE ${stb_SOURCE_DIR}
+        ${VLC_INCLUDE_DIRS})
+
+target_link_directories(viewer PRIVATE ${VLC_LIBRARY_DIRS})
 
 #target_link_libraries(birds PRIVATE
 #        imgui_lib

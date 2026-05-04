@@ -24,6 +24,8 @@
 #include "core/Time.h"
 #include "gui/ModelLoadGUI.h"
 #include "ObjectScripts/CameraScript.h"
+#include "ObjectScripts/FilmScript.h"
+#include "ObjectScripts/OutlineScript.h"
 
 const int WIN_WIDTH  = 800;
 const int WIN_HEIGHT = 600;
@@ -51,6 +53,21 @@ void changeMainShader() {
     }
 }
 
+void CheckInteraction() {
+    static bool intChck = false;
+    if (BiBuild::InputManager::IsActionActive("Interact")) {
+        if (intChck) return;
+        intChck = true;
+        if (auto* obj = BiBuild::InputManager::ObjectUnderMouse()) {
+            obj->hasBeenInteracted = true;
+            std::cout << obj->name<<std::endl;
+        }
+    }else {
+        intChck = false;
+    }
+
+}
+
 std::vector<std::string> skyboxFaces
 {
     "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/px.png",
@@ -59,6 +76,43 @@ std::vector<std::string> skyboxFaces
     "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/ny.png",
     "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/pz.png",
     "resources/textures/skyboxes/sky_09_2k/sky_09_cubemap_2k/nz.png"
+};
+
+std::vector<std::pair<std::string, BiBuild::KeyBind>> stdActions{
+    {"Interact", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+        {BiBuild::InputDevice::MOUSE, GLFW_MOUSE_BUTTON_LEFT}
+    }}},{"MoveCamera", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+        {BiBuild::InputDevice::MOUSE, GLFW_MOUSE_BUTTON_RIGHT}
+    }}},
+    {"MoveForward", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                    {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_W}
+    }}},
+    {"MoveBackward", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                        {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_S}
+    }}},
+    {"MoveRight", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                            {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_D}
+    }}},
+    {"MoveLeft", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                            {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_A}
+    }}},
+    {"MoveUp", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                                {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_Q}
+    }}},
+    {"MoveDown", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                                {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_E}
+    }}},
+    {"Sprint", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                            {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_LEFT_SHIFT}
+    }}},
+    {"MoveToNextPoint", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                                    {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_M},
+                                    {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_N}
+    }}},
+    {"StopMovingAlongCurve", BiBuild::KeyBind{std::vector<BiBuild::InputToken>{
+                                        {BiBuild::InputDevice::KEYBOARD, GLFW_KEY_P}
+    }}}
+
 };
 
 int main() {
@@ -97,6 +151,9 @@ int main() {
     BiBuild::RenderSystem::Initialize(window, WIN_WIDTH,WIN_HEIGHT, scene.cameraObject);
     // Callbacks setup
     BiBuild::InputManager::Init(window);
+    for (auto& action : stdActions) {
+        BiBuild::InputManager::RegisterAction(action.first, action.second);
+    }
 
     // Setup ImGui context
     IMGUI_CHECKVERSION();
@@ -150,6 +207,11 @@ int main() {
     scene.cameraObject->transform->localPosition = glm::vec3(0.0f, 00.0f, 10.0f);
 
 
+    auto screen = scene.CreateObject("Screen");
+    auto filmScript = screen->AddScript<BiBuild::FilmScript>();
+    screen->transform->localScale = glm::vec3(192, 1, 108);
+    screen->hasClickableParts = true;
+    filmScript->SetVideo("./test_models/video.mp4");
 
 
 
@@ -182,25 +244,25 @@ int main() {
     sunLight->intensity = 1.0f;
 
 
-    auto pointObj = scene.CreateObject("BlueRimLight");
-    auto* pointModel = pointObj->AddComponent<BiBuild::ModelComponent>();
-    pointModel->mesh = BiBuild::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
-    auto* pointMaterial = BiBuild::ResourceManager::CreateMaterial("point");
-    pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
-    pointMaterial->diffuse   = glm::vec4(glm::vec3(0), 1); //
-    pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
-    pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
-    pointModel->mat = pointMaterial;
-    auto* pointLight = pointObj->AddComponent<BiBuild::LightComponent>();
-    pointLight->type        = BiBuild::LightType::Point;
-    pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);
-    pointLight->ambient     = 0.3f*pointLight->diffuse;
-    // Bright teal/cyan to contrast the orange bird
-    pointLight->specular    = glm::vec3(0.5f, 0.8f, 1.0f);
-    pointLight->attenuation = glm::vec3(1.0f, 0.0014f, 0.000007f); // Fades out nicely
-    // pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
-    pointObj->transform->localPosition = glm::vec3(0.0f, 20.0f, 00.0f); // Positioned above and behind the camera for rim lighting
-    pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
+    // auto pointObj = scene.CreateObject("BlueRimLight");
+    // auto* pointModel = pointObj->AddComponent<BiBuild::ModelComponent>();
+    // pointModel->mesh = BiBuild::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    // auto* pointMaterial = BiBuild::ResourceManager::CreateMaterial("point");
+    // pointMaterial->ambient   = glm::vec3(0.0f); // No self-illumination
+    // pointMaterial->diffuse   = glm::vec4(glm::vec3(0), 1); //
+    // pointMaterial->specular  = glm::vec3(0.0f); // No specular highlights on the cube itself
+    // pointMaterial->emission  = glm::vec3(0.1f, 0.6f, 1.0f); // Bright cyan glow to visualize the light
+    // pointModel->mat = pointMaterial;
+    // auto* pointLight = pointObj->AddComponent<BiBuild::LightComponent>();
+    // pointLight->type        = BiBuild::LightType::Point;
+    // pointLight->diffuse     = glm::vec3(0.1f, 0.6f, 1.0f);
+    // pointLight->ambient     = 0.3f*pointLight->diffuse;
+    // // Bright teal/cyan to contrast the orange bird
+    // pointLight->specular    = glm::vec3(0.5f, 0.8f, 1.0f);
+    // pointLight->attenuation = glm::vec3(1.0f, 0.0014f, 0.000007f); // Fades out nicely
+    // // pointLight->intensity   = 2.0f; // Overdrive the intensity slightly for a dramatic rim effect
+    // pointObj->transform->localPosition = glm::vec3(0.0f, 20.0f, 00.0f); // Positioned above and behind the camera for rim lighting
+    // pointObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
 
 
@@ -227,60 +289,64 @@ int main() {
     // SpotlightObj->transform->localScale = glm::vec3(0.2f); // Make the cube smaller to represent the light source
 
 
-    auto dragon = scene.CreateObject("dragon");
-    auto* dragonModel = dragon->AddComponent<BiBuild::ModelComponent>();
-
-    dragonModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/Dragon_80K.obj");
-    auto* dragonMaterial = BiBuild::ResourceManager::CreateMaterial("copper");
-    dragonModel->mat = dragonMaterial;
-    dragonModel->mat->shader = BiBuild::ResourceManager::GetShaderProgram("vegetationShader");
-    // 2. Set up a "Shiny Copper" Material
-    dragonMaterial->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
-    dragonMaterial->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
-    dragonMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
-    dragonMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
-    dragonMaterial->shininess = 10.0f;
-
-    dragon->transform->localScale = glm::vec3(100);
-    dragon->transform->localPosition = glm::vec3(0, 50, 0);
-
-
-    auto lemon = scene.CreateObject("lemon");
-    auto lemonModel = lemon->AddComponent<BiBuild::ModelComponent>();
-    lemonModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/lemon_4k.blend/lemon_4k.fbx");
-    lemonModel->mat = BiBuild::ResourceManager::CreateMaterial("lemon");
-    auto* lemonTex = BiBuild::ResourceManager::LoadTexture("./test_models/lemon_4k.blend/textures/lemon_diff_4k.jpg");
-    auto* lemonNorm = BiBuild::ResourceManager::LoadTexture("./test_models/lemon_4k.blend/textures/lemon_nor_gl_4k.jpg");
-    lemonModel->mat->textures.push_back(lemonTex);
-    lemonModel->mat->textures.push_back(lemonNorm);
-    // lemonModel->mat->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
-    // lemonModel->mat->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
-    // lemonModel->mat->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
-    lemonModel->mat->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
-    lemonModel->mat->shininess = 1.0f;
-    lemon->transform->localScale = glm::vec3(100);
-    lemon->transform->localPosition = glm::vec3(50, 10, 0);
+    // auto dragon = scene.CreateObject("dragon");
+    // auto* dragonModel = dragon->AddComponent<BiBuild::ModelComponent>();
+    //
+    // dragonModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/Dragon_80K.obj");
+    // auto* dragonMaterial = BiBuild::ResourceManager::CreateMaterial("copper");
+    // dragonModel->mat = dragonMaterial;
+    // dragonModel->mat->shader = BiBuild::ResourceManager::GetShaderProgram("vegetationShader");
+    // // 2. Set up a "Shiny Copper" Material
+    // dragonMaterial->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
+    // dragonMaterial->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
+    // dragonMaterial->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    // dragonMaterial->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    // dragonMaterial->shininess = 10.0f;
+    //
+    // dragon->transform->localScale = glm::vec3(100);
+    // dragon->transform->localPosition = glm::vec3(0, 50, 0);
 
 
+    // auto lemon = scene.CreateObject("lemon");
+    // auto lemonModel = lemon->AddComponent<BiBuild::ModelComponent>();
+    // lemonModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/lemon_4k.blend/lemon_4k.fbx");
+    // lemonModel->mat = BiBuild::ResourceManager::CreateMaterial("lemon");
+    // auto* lemonTex = BiBuild::ResourceManager::LoadTexture("./test_models/lemon_4k.blend/textures/lemon_diff_4k.jpg");
+    // auto* lemonNorm = BiBuild::ResourceManager::LoadTexture("./test_models/lemon_4k.blend/textures/lemon_nor_gl_4k.jpg");
+    // lemonModel->mat->textures.push_back(lemonTex);
+    // lemonModel->mat->textures.push_back(lemonNorm);
+    // // lemonModel->mat->ambient   = glm::vec4(0.2f, 0.1f, 0.05f, 1.0f); // Deep, warm shadows
+    // // lemonModel->mat->diffuse   = glm::vec4(1.0f, 0.5f, 0.2f, 1.0f );  // Base orange/copper color
+    // // lemonModel->mat->specular  = glm::vec3(1.0f, 0.8f, 0.6f);  // Bright, warm specular highlight
+    // lemonModel->mat->emission  = glm::vec3(0.0f);              // Set to e.g., (0.5, 0.1, 0.0) if you want it to glow!
+    // lemonModel->mat->shininess = 1.0f;
+    // lemon->transform->localScale = glm::vec3(100);
+    // lemon->transform->localPosition = glm::vec3(50, 10, 0);
 
-    auto ground = scene.CreateObject("ground");
-    auto groundModel = ground->AddComponent<BiBuild::ModelComponent>();
-    groundModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/rocks/ground.obj");
-    groundModel->mat = BiBuild::ResourceManager::CreateMaterial("ground");
-    auto groundTex = BiBuild::ResourceManager::LoadTexture("./test_models/rocks/gray_rocks.png");
-    auto groundNormal = BiBuild::ResourceManager::LoadTexture("./test_models/rocks/normalMap1.png");
-    groundModel->mat->textures.push_back(groundTex);
-    groundModel->mat->textures.push_back(groundNormal);
-    groundModel->mat->specular = glm::vec3(1.0);
-    groundModel->mat->emission = glm::vec3(0);
-    ground->transform->localScale = glm::vec3(100);
 
 
-    auto test = scene.CreateObject("test");
-    auto tmod = test->AddComponent<BiBuild::ModelComponent>();
-    tmod->mesh = BiBuild::ResourceManager::GetMesh("./test_models/Dragon_80K.obj");
-    // tmod->mat = BiBuild::ResourceManager::GetMaterial("ground");
-    tmod->mat = BiBuild::ResourceManager::GetMaterial("point");
+    // auto ground = scene.CreateObject("ground");
+    // auto groundModel = ground->AddComponent<BiBuild::ModelComponent>();
+    // groundModel->mesh = BiBuild::ResourceManager::GetMesh("./test_models/rocks/ground.obj");
+    // groundModel->mat = BiBuild::ResourceManager::CreateMaterial("ground");
+    // auto groundTex = BiBuild::ResourceManager::LoadTexture("./test_models/rocks/gray_rocks.png");
+    // auto groundNormal = BiBuild::ResourceManager::LoadTexture("./test_models/rocks/normalMap1.png");
+    // groundModel->mat->textures.push_back(groundTex);
+    // groundModel->mat->textures.push_back(groundNormal);
+    // groundModel->mat->specular = glm::vec3(1.0);
+    // groundModel->mat->emission = glm::vec3(0);
+    // ground->transform->localScale = glm::vec3(100);
+
+    auto outline = scene.CreateObject("Outline");
+    outline->AddScript<BiBuild::OutlineScript>();
+
+
+
+    // auto test = scene.CreateObject("test");
+    // auto tmod = test->AddComponent<BiBuild::ModelComponent>();
+    // tmod->mesh = BiBuild::ResourceManager::GetMesh("./test_models/Dragon_80K.obj");
+    // // tmod->mat = BiBuild::ResourceManager::GetMaterial("ground");
+    // tmod->mat = BiBuild::ResourceManager::GetMaterial("point");
 
 
     int framen = 0;
@@ -289,7 +355,7 @@ int main() {
         BiBuild::Time::UpdateTime();
         // std::cout << BiBuild::Time::DeltaTime();
         glfwPollEvents();
-
+        CheckInteraction();
 
         // if (!ImGui::GetIO().WantCaptureKeyboard) {
         //     camera->UpdateCameraFromInput(deltaTime);
@@ -301,7 +367,7 @@ int main() {
         }
 
         BiBuild::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
-        changeMainShader();
+        // changeMainShader();
         BiBuild::RenderSystem::UpdateAndDraw(
             scene,
             camera->BuildCameraViewMatrix(),
@@ -312,7 +378,7 @@ int main() {
             camera->GetProjectionMat()
         );
         // BiBuild::RenderSystem::DrawFullscreenQuad(BiBuild::RenderSystem::GetUUIDFrameBuffer()->GetTexture());
-
+        // if (BiBuild::InputManager::ObjectUnderMouse()) std::cout << "Object: " << BiBuild::InputManager::ObjectUnderMouse()->name << std::endl;
 
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -329,7 +395,7 @@ int main() {
         // ImGui::Text("Draw calls per frame: %d; Objects on the scene: %d", BiBuild::RenderSystem::drawCallsLastFrame, renderSystem.objectsOnScreenLastFrame);
         ImGui::End();
 
-        BiBuild::ModelLoadGUI::draw(test);
+        // BiBuild::ModelLoadGUI::draw(test);
 
         ImGui::Begin("Scene Objects");
 

@@ -25,9 +25,15 @@ namespace BiBuild {
         Mesh* mesh = nullptr;
         Material* mat = nullptr;
         bool isClickable = false;
+        bool cullFront = false;
+        bool drawUUID = true;
         ModelComponent(SceneObject* owner) : Component(owner){}
 
         void Draw(ShaderProgram* shader) {
+            if (!mesh || !shader || !owner || !owner->transform) {
+                return;
+            }
+
             static Material fallbackMaterial;
             if (mat) {
                 mat->SendToShader(shader);
@@ -35,7 +41,9 @@ namespace BiBuild {
                 fallbackMaterial.SendToShader(shader);
             }
             auto modelMatrix = owner->transform->worldMatrix;
+            if (cullFront) glCullFace(GL_FRONT);
             mesh->Draw(modelMatrix, shader);
+            if (cullFront) glCullFace(GL_BACK);
         }
 
     };

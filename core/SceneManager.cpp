@@ -32,14 +32,23 @@ namespace BiBuild {
 
         SceneObject* ptr = obj.get();
         objects.push_back(std::move(obj));
+        objects_by_ids.emplace(ptr->uuid, ptr);
 
-        // Automatically parent to root, unless this IS the root
         if (rootObject != nullptr) {
             rootObject->AddChild(ptr);
         }
 
         return ptr;
     }
+
+    SceneObject *SceneManager::GetObject(const uuids::uuid id) {
+        auto it = objects_by_ids.find(id);
+        if (it != objects_by_ids.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
     SceneObject* SceneManager::CreateSkyBox(const std::vector<std::string>& faces) {
         if (skybox) return skybox;
 
@@ -108,25 +117,28 @@ namespace BiBuild {
     void SceneManager::UpdateTransformHierarchy(TransformComponent* transform, const glm::mat4& parentWorldMatrix) {
         glm::mat4 effectiveParentMatrix = parentWorldMatrix;
 
-        if (!transform->inheritScale) {
-            glm::vec3 right = glm::normalize(glm::vec3(parentWorldMatrix[0]));
-            glm::vec3 up    = glm::normalize(glm::vec3(parentWorldMatrix[1]));
-            glm::vec3 fwd   = glm::normalize(glm::vec3(parentWorldMatrix[2]));
+        if (transform->updateWorldMatrix) {
+            if (!transform->inheritScale) {
+                glm::vec3 right = glm::normalize(glm::vec3(parentWorldMatrix[0]));
+                glm::vec3 up    = glm::normalize(glm::vec3(parentWorldMatrix[1]));
+                glm::vec3 fwd   = glm::normalize(glm::vec3(parentWorldMatrix[2]));
 
-            glm::vec3 pos   = glm::vec3(parentWorldMatrix[3]);
+                auto pos = glm::vec3(parentWorldMatrix[3]);
 
-            effectiveParentMatrix = glm::mat4(
-                glm::vec4(right, 0.0f),
-                glm::vec4(up,    0.0f),
-                glm::vec4(fwd,   0.0f),
-                glm::vec4(pos,   1.0f)
-            );
+                effectiveParentMatrix = glm::mat4(
+                    glm::vec4(right, 0.0f),
+                    glm::vec4(up,    0.0f),
+                    glm::vec4(fwd,   0.0f),
+                    glm::vec4(pos,   1.0f)
+                );
+            }
+
+            transform->worldMatrix = effectiveParentMatrix * transform->GetLocalMatrix();
         }
 
-        transform->worldMatrix = effectiveParentMatrix * transform->GetLocalMatrix();
 
         for (SceneObject* child : transform->children) {
-            if (TransformComponent* childTransform = child->GetComponent<TransformComponent>()) {
+            if (auto* childTransform = child->GetComponent<TransformComponent>()) {
                 UpdateTransformHierarchy(childTransform, transform->worldMatrix);
             }
         }

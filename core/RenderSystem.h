@@ -65,6 +65,7 @@ namespace BiBuild {
 
         FrameBuffer* uuidFBO = nullptr;
         ShaderProgram* uuidShader = nullptr;
+        SceneManager* currentScene;
 
 
         // unsigned int gridVAO = 0, gridVBO = 0; // For drawing the 3D floor grid
@@ -89,8 +90,9 @@ namespace BiBuild {
 
         static void Initialize(GLFWwindow *window, int width, int height, SceneObject *cameraObject);
 
-        static void UpdateAndDraw(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
+        static void UpdateAndDraw(SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
         static void DrawIDs(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
+        static SceneObject* GetObjectFromScreen(int xpos, int ypos);
         static ShaderProgram* GetDefaultShader();
         static void SetDefaultShader(ShaderProgram* prg);
         static void SetFogTexture(Texture* tex);

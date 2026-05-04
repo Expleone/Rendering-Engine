@@ -24,6 +24,7 @@ namespace BiBuild {
         std::string name;
         TransformComponent* transform;
         bool hasClickableParts;
+        bool hasBeenInteracted;
 
         std::vector<std::unique_ptr<Component>> components;
         std::vector<std::unique_ptr<ObjectScript>> scripts;

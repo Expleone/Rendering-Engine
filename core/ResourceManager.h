@@ -64,6 +64,7 @@ namespace BiBuild {
 
         static Texture* LoadTexture(const std::string& path);
         static Texture* LoadTexture(const std::string& path, GLint wrapMode, GLint filterMode);
+        static Texture* CreateTexture(const std::string& name,TexType type, int width, int height, bool mipmap);
         static Texture* LoadTextureCubeMap(const std::vector<std::string> &faces);
         static Texture* GetTexture(const std::string& path);
 

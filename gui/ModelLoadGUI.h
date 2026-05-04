@@ -21,10 +21,19 @@ public:
     static void draw(SceneObject* obj) {
         ImGui::Begin("Load Model");
 
-        if (!obj) return;
+        if (!obj) {
+            ImGui::TextUnformatted("No scene object selected.");
+            ImGui::End();
+            return;
+        }
+
         auto model = obj->GetComponent<ModelComponent>();
         if (!model) model = obj->AddComponent<ModelComponent>();
-        ImGui::Text("Current model: %s", model->mesh->name.c_str());
+        if (model && model->mesh) {
+            ImGui::Text("Current model: %s", model->mesh->name.c_str());
+        } else {
+            ImGui::TextUnformatted("Current model: <none>");
+        }
         ImGui::InputText("Filepath:", &filepath);
         if (ImGui::Button("Load")) {
             loadModel(obj, filepath);
@@ -39,7 +48,11 @@ public:
     }
 
     static void loadModel(SceneObject* obj, std::string& filepath) {
+        if (!obj) return;
         auto model = obj->GetComponent<ModelComponent>();
+        if (!model) model = obj->AddComponent<ModelComponent>();
+        if (!model) return;
+
         auto newMesh = ResourceManager::GetMesh(filepath);
         if (!newMesh) return;
         scale = 1;

@@ -18,7 +18,7 @@ namespace BiBuild {
 
     glm::mat4 CameraComponent::FastCameraInverse() {
         if (!this->owner || !this->owner->transform) {
-            return {1.0f};
+            return glm::mat4(1.0f);
         }
         const glm::mat4& worldMatrix = this->owner->transform->worldMatrix;
         glm::mat3 rotation(worldMatrix);
@@ -34,29 +34,21 @@ namespace BiBuild {
     glm::mat4 CameraComponent::GetProjectionMat() {
         return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
     }
-    glm::mat4 CameraComponent::GetViewMat() {
-        return FastCameraInverse();;
-    }
 
-    glm::vec3 CameraComponent::GetForwardFromYawPitch(float yawDegrees, float pitchDegrees) {
-        const float yaw = glm::radians(yawDegrees);
-        const float pitch = glm::radians(pitchDegrees);
-        return glm::normalize(glm::vec3(
-            cosf(pitch) * cosf(yaw),
-            sinf(pitch),
-            cosf(pitch) * sinf(yaw)
-        ));
+    glm::mat4 CameraComponent::GetViewMat() {
+        return FastCameraInverse();
     }
 
     glm::mat4 CameraComponent::BuildCameraViewMatrix() const {
         if (!this->owner || !this->owner->transform) {
-            return {1.0f};
+            return glm::mat4(1.0f);
         }
 
-        const glm::vec3 position = this->owner->transform->localPosition;
-        const glm::vec3 forward = GetForwardFromYawPitch(lookState.yawDegrees, lookState.pitchDegrees);
-        return glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
+        const auto posv4 = owner->transform->worldMatrix[3];
+        const auto position = glm::vec3(posv4.x, posv4.y, posv4.z);
+        const glm::vec3 forward = owner->transform->Forward();
+        const glm::vec3 up = owner->transform->Up();
+
+        return glm::lookAt(position, position + forward, up);
     }
-
-
 }

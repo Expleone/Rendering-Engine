@@ -5,25 +5,21 @@
 #ifndef VIEWER_CAMERACOMPONENT_H
 #define VIEWER_CAMERACOMPONENT_H
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "Component.h"
 #include "GLFW/glfw3.h"
 
 namespace BiBuild {
 
-
-
     enum class ProjectionType{Perspective, Orthographic};
 
     class CameraComponent : public Component{
     public:
         struct CameraControlState {
-            float yawDegrees = -90.0f;
-            float pitchDegrees = 0.0f;
             float mouseSensitivity = 0.12f;
             bool isMouseCaptured = false;
             double lastMouseX = 0.0;
@@ -43,12 +39,8 @@ namespace BiBuild {
         glm::mat4 GetProjectionMat();
         glm::mat4 GetViewMat();
 
-        static glm::vec3 GetForwardFromYawPitch(float yawDegrees, float pitchDegrees);
         glm::mat4 BuildCameraViewMatrix() const;
     };
 }
-
-
-
 
 #endif //VIEWER_CAMERACOMPONENT_H

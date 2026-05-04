@@ -6,58 +6,159 @@
 
 #include "imgui.h"
 #include "../core/Time.h"
+#include <glm/gtc/quaternion.hpp>
 
 namespace BiBuild {
     void CameraScript::Update() {
-    if (!this->owner || !this->owner->transform || !camera) {
+        if (!this->owner || !this->owner->transform || !camera) {
             return;
         }
 
         const bool canControlMouse = !ImGui::GetIO().WantCaptureMouse;
-        const bool isLookPressed = InputManager::IsKeyPressed(GLFW_MOUSE_BUTTON_RIGHT);
+        const bool isLookPressed = InputManager::IsActionActive("MoveCamera");
         auto* lookState = &camera->lookState;
 
         if (canControlMouse && isLookPressed) {
             if (!lookState->isMouseCaptured) {
                 lookState->isMouseCaptured = true;
                 InputManager::SetInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                lookState->lastMouseX = InputManager::lastMousePos.x;
-                lookState->lastMouseY = InputManager::lastMousePos.y;
+                lookState->lastMouseX = InputManager::GetPreviousMousePos().x;
+                lookState->lastMouseY = InputManager::GetPreviousMousePos().y;
             }
 
-            double mouseX = InputManager::currentMousePos.x;
-            double mouseY = InputManager::currentMousePos.y;
+            auto mousePos = InputManager::GetMousePos();
 
-            const float deltaX = static_cast<float>(mouseX - lookState->lastMouseX);
-            const float deltaY = static_cast<float>(mouseY - lookState->lastMouseY);
-            lookState->lastMouseX = mouseX;
-            lookState->lastMouseY = mouseY;
+            const auto deltaX = static_cast<float>(mousePos.x - lookState->lastMouseX);
+            const auto deltaY = static_cast<float>(mousePos.y - lookState->lastMouseY);
+            lookState->lastMouseX = mousePos.x;
+            lookState->lastMouseY = mousePos.y;
 
-            lookState->yawDegrees += deltaX * lookState->mouseSensitivity;
-            lookState->pitchDegrees -= deltaY * lookState->mouseSensitivity;
-            lookState->pitchDegrees = std::clamp(lookState->pitchDegrees, -89.0f, 89.0f);
+            glm::quat yawQuat = glm::angleAxis(glm::radians(-deltaX * lookState->mouseSensitivity), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            glm::vec3 currentForward = owner->transform->Forward();
+            float currentPitch = glm::degrees(std::asin(currentForward.y));
+            float pitchDelta = -deltaY * lookState->mouseSensitivity;
+
+            if (currentPitch + pitchDelta > 89.0f) pitchDelta = 89.0f - currentPitch;
+            if (currentPitch + pitchDelta < -89.0f) pitchDelta = -89.0f - currentPitch;
+
+            glm::quat pitchQuat = glm::angleAxis(glm::radians(pitchDelta), glm::vec3(1.0f, 0.0f, 0.0f));
+
+            owner->transform->Rotate(yawQuat, TransformComponent::TransformSpace::Parent);
+            owner->transform->Rotate(pitchQuat, TransformComponent::TransformSpace::Local);
+
         } else if (lookState->isMouseCaptured) {
             lookState->isMouseCaptured = false;
             InputManager::SetInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
 
-        const glm::vec3 forward = CameraComponent::GetForwardFromYawPitch(lookState->yawDegrees, lookState->pitchDegrees);
+        // Extract vectors directly from the transform's quaternion
+        const glm::vec3 forward = owner->transform->localRotation * glm::vec3(0.0f, 0.0f, -1.0f);
         const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
         const glm::vec3 up(0.0f, 1.0f, 0.0f);
 
         glm::vec3 moveDir(0.0f);
-        if (InputManager::IsKeyPressed(GLFW_KEY_S)) moveDir -= forward;
-        if (InputManager::IsKeyPressed(GLFW_KEY_A)) moveDir -= right;
-        if (InputManager::IsKeyPressed(GLFW_KEY_D)) moveDir += right;
-        if (InputManager::IsKeyPressed(GLFW_KEY_W)) moveDir += forward;
-        if (InputManager::IsKeyPressed(GLFW_KEY_Q)) moveDir -= up;
-        if (InputManager::IsKeyPressed(GLFW_KEY_E)) moveDir += up;
+        if (!isMovementDisabled) {
+            if (InputManager::IsActionActive("MoveBackward")) moveDir -= forward;
+            if (InputManager::IsActionActive("MoveLeft")) moveDir -= right;
+            if (InputManager::IsActionActive("MoveRight")) moveDir += right;
+            if (InputManager::IsActionActive("MoveForward")) moveDir += forward;
+            if (InputManager::IsActionActive("MoveDown")) moveDir -= up;
+            if (InputManager::IsActionActive("MoveUp")) moveDir += up;
+        }
+
+        if (InputManager::IsActionActive("StopMovingAlongCurve")) {
+            isMovementDisabled = false;
+            isMovingAlongCurve = false;
+        }
+
+        if (InputManager::IsActionActive("MoveToNextPoint")) {
+            if (!isPointChanged) {
+                if (moveAlong != nullptr) {
+                    moveAlong.reset();
+                }
+
+                isPointChanged = true;
+                currentPoint+=1;
+                if (currentPoint >= points.size()) currentPoint = -1;
+                if (currentPoint < 0) {
+                    isMovingAlongCurve = false;
+                    isMovementDisabled = false;
+                    return;
+                }
+
+                createCurveToLocalPoint(points[currentPoint].first, points[currentPoint].second);
+                curveParam = 0;
+                isMovingAlongCurve = true;
+                isMovementDisabled = true;
+                moveTime = 2;
+            }
+        } else {
+            isPointChanged = false;
+        }
+
+        if (isMovingAlongCurve) {
+            if (!moveAlong || moveTime <= 0.0) {
+                isMovingAlongCurve = false;
+                isMovementDisabled = false;
+            } else {
+                curveParam += static_cast<float>(Time::DeltaTime() / moveTime);
+                curveParam = glm::clamp(curveParam, 0.0f, 1.0f);
+
+                const auto pos = owner->transform->localPosition;
+                const auto nextPos = moveAlong->getPoint(curveParam);
+                LookInDirection(nextPos-pos);
+                owner->transform->localPosition = nextPos;
+
+                if (curveParam >= 1.0f) {
+                    isMovingAlongCurve = false;
+                    isMovementDisabled = false;
+                }
+            }
+        }
 
         if (glm::length(moveDir) > 0.0f) {
             moveDir = glm::normalize(moveDir);
         }
 
-        const float speed = InputManager::IsKeyPressed(GLFW_KEY_LEFT_SHIFT) ? movementSpeed * 5.0f : movementSpeed;
+        const float speed = InputManager::IsActionActive("Sprint") ? movementSpeed * 5.0f : movementSpeed;
         this->owner->transform->localPosition += moveDir * speed * static_cast<float>(Time::DeltaTime());
+    }
+
+    void CameraScript::createCurveToLocalPoint(const glm::vec3 &point, const glm::vec3& dir) {
+        auto A = owner->transform->localPosition;
+        auto B = point;
+
+        float distance = glm::length(B - A);
+
+        auto C1 = A + (owner->transform->Forward()*(distance*0.25f));
+        auto C2 = B - (glm::normalize(dir) * (distance * 0.25f));
+        std::vector<glm::vec3>controlPoints{A,C1,C2,B};
+        moveAlong = std::make_unique<Curve>(controlPoints);
+    }
+
+    void CameraScript::MoveAlongCurve(std::unique_ptr<Curve> curve, double time) {
+        if (moveAlong != nullptr) {
+            moveAlong.reset();
+        }
+        moveAlong = std::move(curve);
+        isMovementDisabled = true;
+        curveParam = 0;
+        moveTime = time;
+        isMovingAlongCurve = true;
+    }
+
+    void CameraScript::LookInDirection(glm::vec3 targetDirection) {
+        if (glm::length(targetDirection) < 0.0001f) return;
+        glm::vec3 dir = glm::normalize(targetDirection);
+
+        glm::vec3 up = glm::vec3(0,1,0);
+
+        if (glm::abs(glm::dot(dir, up)) > 0.999f) {
+            glm::vec3 right = owner->transform->localRotation * glm::vec3(1.0f, 0.0f, 0.0f);
+            up = glm::normalize(glm::cross(right, dir));
+        }
+
+        owner->transform->localRotation = glm::quatLookAt(dir, up);
     }
 }
