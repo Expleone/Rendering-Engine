@@ -27,6 +27,7 @@ namespace BiBuild {
         bool isClickable = false;
         bool cullFront = false;
         bool drawUUID = true;
+        bool draw = true;
         ModelComponent(SceneObject* owner) : Component(owner){}
 
         void Draw(ShaderProgram* shader) {

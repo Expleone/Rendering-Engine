@@ -11,14 +11,15 @@
 #include "../components/TransformComponent.h"
 #include "../helper_functions/helper.h"
 
+
 namespace BiBuild {
 
     class SceneManager {
     private:
 
         SceneObject* rootObject = nullptr;
-        float fogDistClose = 400;
-        float fogDistFar = 500;
+        float fogDistClose = 40;
+        float fogDistFar = 60;
 
     public:
         std::vector<std::unique_ptr<SceneObject>> objects;
@@ -30,8 +31,8 @@ namespace BiBuild {
 
         SceneObject* CreateObject(const std::string& name);
         SceneObject* GetObject(const uuids::uuid id);
-        SceneObject* CreateSkyBox(const std::vector<std::string>& faces);
-        void ChangeSkyBox(const std::vector<std::string>& faces);
+        SceneObject* CreateSkyBox(const std::vector<std::string> &faces, const std::vector<std::string> &facesNight);
+        void ChangeSkyBox(const std::vector<std::string> &faces, const std::vector<std::string> &facesNight);
         void ApplySceneSettings();
         void SetFogDistance(float close, float far);
 

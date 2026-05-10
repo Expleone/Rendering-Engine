@@ -188,6 +188,11 @@ add_executable(viewer main.cpp test_models/birds.c
         core/TextGenerator.h
         ObjectScripts/TextScript.cpp
         ObjectScripts/TextScript.h
+        ObjectScripts/TVScript.cpp
+        ObjectScripts/TVScript.h
+        setup.h
+        ObjectScripts/BiplaneScript.cpp
+        ObjectScripts/BiplaneScript.h
 )
 
 #add_executable(birds c.cpp test_models/birds.c

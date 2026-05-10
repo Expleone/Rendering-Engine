@@ -11,6 +11,9 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "Component.h"
+#ifndef GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_NONE
+#endif
 #include "GLFW/glfw3.h"
 
 namespace BiBuild {
@@ -40,7 +43,10 @@ namespace BiBuild {
         glm::mat4 GetViewMat();
 
         glm::mat4 BuildCameraViewMatrix() const;
+
     };
+
+
 }
 
 #endif //VIEWER_CAMERACOMPONENT_H

@@ -15,6 +15,7 @@ namespace BiBuild {
     public:
         Component(SceneObject* owner) : owner(owner){}
         virtual ~Component() = default;
+        [[nodiscard]] SceneObject* GetOwner() const { return owner; }
     };
 } // BiBuild
 

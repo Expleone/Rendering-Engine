@@ -45,7 +45,11 @@ layout (std140) uniform Fog {
     float fogDistanceFar;
     int useSkybox;
 };
+
+
 uniform samplerCube fogTex;
+uniform vec3 sunPos;
+uniform samplerCube nightFogTex;
 
 uniform Material material;
 
@@ -111,9 +115,11 @@ vec3 CalculateLighting(vec3 normal) {
             //
             float spotLightEffect = 1.0;
             if(type == 2){
-                if (dot(-lDir, lightDir) < cos(cutoff)){
-                    spotLightEffect = 0.0;
-                }
+                float theta = dot(-lDir, normalize(lightDir));
+                float outerCutoff = cos(cutoff);
+                float innerCutoff = cos(cutoff * 0.85);
+                float epsilon = innerCutoff - outerCutoff;
+                spotLightEffect = clamp((theta - outerCutoff) / epsilon, 0.0, 1.0);
             }
             result += ambient + spotLightEffect*attenuationFactor*(diffuse + specular);
         }
@@ -141,9 +147,28 @@ void main() {
     vec3 viewPos = inverse(view)[3].xyz;
     float dis = distance(viewPos, FragPos);
     float fogCoeficient = 0.0;
-    if(dis >= fogDistanceClose) fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
-    if(fogCoeficient==1) discard;
-    if(useSkybox == 1) fog = texture(fogTex, FragPos - viewPos).rgb;
+
+    if(dis >= fogDistanceClose) {
+        fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
+    }
+    if(fogCoeficient == 1.0) discard;
+
+    vec3 skyDirection = FragPos - viewPos;
+
+    vec4 skyColor = texture(fogTex, skyDirection);
+    if(sunPos.y < 0.3) {
+        skyColor = mix(skyColor, texture(nightFogTex, skyDirection), 1.0 - sunPos.y / 0.3);
+    }
+    if(sunPos.y <= 0.0) {
+        skyColor = texture(nightFogTex, skyDirection);
+    }
+
+    if(dis >= fogDistanceClose) {
+        fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
+    }
+    if(fogCoeficient == 1.0) discard;
+
+    if(useSkybox == 1) fog = skyColor.rgb;
     vec4 color = vec4(mix(material.emission + CalculateLighting(normal), fog, fogCoeficient), alpha);
 
     fragmentColor = color;

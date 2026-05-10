@@ -1,0 +1,15 @@
+# Format: ActionName Device KeyCode [Device KeyCode...] Keycodes mouse: https://www.glfw.org/docs/3.3/group__buttons.html#ga3e2f2cf3c4942df73cc094247d275e74 keyboard: https://www.glfw.org/docs/3.3/group__keys.html#ga1c8e5b9a0c7d2e4f1a9b8c9e6f0c8e
+Interact MOUSE 0
+MoveCamera MOUSE 1
+MoveForward KEYBOARD 87
+MoveBackward KEYBOARD 83
+MoveRight KEYBOARD 68
+MoveLeft KEYBOARD 65
+MoveUp KEYBOARD 81
+MoveDown KEYBOARD 69
+Sprint KEYBOARD 340
+MoveToNextPoint KEYBOARD 77 KEYBOARD 78
+StopMovingAlongCurve KEYBOARD 80
+ToggleDebug KEYBOARD 76
+ToggleUUID KEYBOARD 85
+ReloadKeybindings KEYBOARD 82

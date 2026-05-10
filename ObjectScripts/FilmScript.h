@@ -38,8 +38,9 @@ namespace BiBuild {
 //                 setenv("VLC_PLUGIN_PATH", "/usr/lib/x86_64-linux-gnu/vlc/plugins", 1);
 // #endif
                 // Removed "--quiet" and added "--verbose=2" for debug output
-                const char* fallbackArgs[] = {"--verbose=2", "--file-logging", "--logfile=vlc_log.txt", "--no-video-title-show"};
-                return libvlc_new(2, fallbackArgs);
+                const char* fallbackArgs[] = {"--verbose=2", "--file-logging", "--logfile=vlc_log.txt", "--no-video-title-show", "--video-filter=transform",
+    "--transform-type=vflip"};
+                return libvlc_new(6, fallbackArgs);
             }();
             return instance;
         }
@@ -47,6 +48,10 @@ namespace BiBuild {
 
 
     class FilmScript : public ObjectScript {
+
+
+
+
         struct VideoContext {
             std::mutex mutex;
             void* pixels = nullptr;
@@ -58,31 +63,30 @@ namespace BiBuild {
         VideoContext context{};
         libvlc_media_player_t* media_player = nullptr;
         Texture* tex = nullptr;
-        LightComponent* lightComponent = nullptr;
         bool videoPlaybackEnabled = false;
         bool isPaused = true;
+        libvlc_state_t status;
+        glm::vec3 averageColor{0, 0, 0};
 
-        void setupVideoSurface() {
-            auto model = owner->GetComponent<ModelComponent>();
-            if (!model) {
-                model = owner->AddComponent<ModelComponent>();
-            }
-            if (!model) {
-                return;
-            }
 
-            model->mesh = ResourceManager::LoadMesh("screen", "test_models/quad.obj");
-            model->mat = ResourceManager::CreateMaterial("Video");
-        tex = ResourceManager::CreateTexture("videoTexture", TexType::Tex2D, context.width, context.height, true, GL_RGBA);
-            model->mat->textures.push_back(tex);
-            model->mat->shader =BiBuild::ResourceManager::LoadShaderProgram("screen_shader", "./shaders/vertex/base.vert", "./shaders/fragment/screen.frag");
-        }
 
 
 
     public:
+        typedef enum Status
+        {
+            FilmScript_NothingSpecial=0,
+            FilmScript_Opening,
+            FilmScript_Buffering, /* XXX: Deprecated value. Check the
+                               * libvlc_MediaPlayerBuffering event to know the
+                               * buffering state of a libvlc_media_player */
+            Filmscript_Playing,
+            FilmScript_Paused,
+            FilmScript_Stopped,
+            FilmScript_Ended,
+            FilmScript_Error
+        } FilmStatus;
         FilmScript(SceneObject* owner) : ObjectScript(owner) {
-            setupVideoSurface();
             libvlc_instance_t* vlc_instance = VLCManager::get();
             if (!vlc_instance) {
                 return;
@@ -104,13 +108,7 @@ namespace BiBuild {
                 display_callback,
                 &context
             );
-
-            if (!((lightComponent = owner->GetComponent<LightComponent>()))) {
-                lightComponent = owner->AddComponent<LightComponent>();
-            }
-
-            lightComponent->type = LightType::Directional;
-            lightComponent->direction = owner->transform->Up();
+            tex = ResourceManager::CreateTexture("videoTexture", TexType::Tex2D, context.width, context.height, true, GL_RGBA);
             videoPlaybackEnabled = true;
 
         }
@@ -127,6 +125,14 @@ namespace BiBuild {
 
         void Update() override;
         void SetVideo(const char* filepath);
+        FilmStatus PlayerStatus();
+        void Pause();
+        void Play();
+        glm::vec3 GetAverageColor() const {
+            return averageColor;
+        }
+
+        Texture* GetTexture();
     private:
         static void* lock_callback(void* opaque, void** planes) {
             auto* ctx = static_cast<VideoContext*>(opaque);

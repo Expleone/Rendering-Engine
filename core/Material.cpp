@@ -19,6 +19,7 @@ namespace BiBuild {
         }
 
         auto fogTex = RenderSystem::GetFogTexture();
+        auto nightFogTex = RenderSystem::GetNightFogTexture();
         GLuint textureUnit = 0;
         int tex2DCount = 0;
 
@@ -42,12 +43,22 @@ namespace BiBuild {
                 textureUnit++;
             }
         }
-        int fogUnitIndex = 16;
+        int fogUnitIndex = 15;
+        int nightFogUnitIndex = 16;
         if (shaderProgram) {
             shaderProgram->SetUniformInt("fogTex", fogUnitIndex);
+            shaderProgram->SetUniformInt("nightFogTex", nightFogUnitIndex);
+            shaderProgram->SetUniformVec3("sunPos", RenderSystem::GetSunPosition());
         }
         if (fogTex) {
             glActiveTexture(GL_TEXTURE0 + fogUnitIndex);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, fogTex->GetID());
+        }
+        if (nightFogTex) {
+            glActiveTexture(GL_TEXTURE0 + nightFogUnitIndex);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, nightFogTex->GetID());
+        } else if (fogTex) {
+            glActiveTexture(GL_TEXTURE0 + nightFogUnitIndex);
             glBindTexture(GL_TEXTURE_CUBE_MAP, fogTex->GetID());
         }
 

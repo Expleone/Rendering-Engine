@@ -132,6 +132,12 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+        int channels = 1;
+        if (format == GL_RGB) channels = 3;
+        else if (format == GL_RGBA) channels = 4;
+
+        std::vector<unsigned char> emptyData(width * height * channels, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, emptyData.data());
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
@@ -139,6 +145,16 @@ public:
         glBindTexture(GL_TEXTURE_2D, texId);
 
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,format, GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    void UpdateTexture(void* data, int xoffset, int yoffset, int width, int height, GLuint format) const {
+        glBindTexture(GL_TEXTURE_2D, texId);
+
+        glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,format, GL_UNSIGNED_BYTE, data);
 
         glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -155,6 +171,7 @@ public:
     Texture& operator=(const Texture&) = delete;
 
     [[nodiscard]] GLuint GetID() const { return texId; }
+    [[nodiscard]] const unsigned int *GetIDptr() const { return &texId; }
     [[nodiscard]] TexType GetType() const { return type; }
 };
 

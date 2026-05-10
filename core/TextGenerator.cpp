@@ -10,100 +10,77 @@
 namespace BiBuild {
     class TextScript;
 
-    void TextGenerator::CreateText(SceneObject *obj, std::string &text, glm::vec3 color) {
+    TextScript* TextGenerator::CreateText(SceneObject *obj, std::string text, float scale, glm::vec3 color) {
         auto script = obj->AddScript<TextScript>();
-        script->positions.reserve(text.length());
-        float startX = 0.0f; // Save the initial X position for carriage returns
-        float x = startX;
-        float y = 0.0f;
-        int i = 0;
-
-        for (auto c : text) {
-            if (c == '\n') {
-                x = startX;
-                y -= Get().lineSpacing;
-                continue;
-            }
-
-            Character ch = Get().characters[c];
-
-            float xpos = x + ch.bearing.x;
-            float ypos = y + ch.bearing.y;
-
-            auto pos = glm::vec2(xpos, ypos);
-
-            auto model = obj->AddComponent<ModelComponent>();
-            model->mesh = ch.mesh;
-            model->mat = ResourceManager::CreateMaterial(uuids::to_string(obj->uuid)+":"+text+":"+std::to_string(i));
-            model->mat->textures.push_back(ch.tex);
-            model->mat->shader = ResourceManager::LoadShaderProgram("text_shader", "./shaders/vertex/text.vert", "./shaders/fragment/text.frag");
-            model->mat->diffuse = glm::vec4(color,1);
-            script->positions.push_back(pos);
-            model->mat->AddInfo("symbolPos", &script->positions[i], UniformType::Vec2);
-
-
-            x += ch.advance;
-            i++;
-        }
+        auto model = obj->AddComponent<ModelComponent>();
+        script->textModel = model;
+        model->mesh = CreateTextMesh(text, scale, &script->totalTextSize);
+        std::hash<std::string> hasher;
+        size_t hashVal = hasher(text);
+        model->mat = ResourceManager::CreateMaterial(uuids::to_string(obj->uuid) + "_text_" + std::to_string(hashVal));
+        model->mat->textures.push_back(Get().atlas);
+        model->mat->ambient = glm::vec4(color, 1.0f);
+        model->mat->diffuse = glm::vec4(color, 1.0f);
+        model->mat->shader = ResourceManager::LoadShaderProgram("text_shader", "./shaders/vertex/text.vert", "./shaders/fragment/text.frag");
+        model->mat->AddInfo("totalTextSize", &script->totalTextSize, UniformType::Vec2);
+        model->mat->AddInfo("uvScale", &script->uvScale, UniformType::Float);
+        return script;
     }
-    void TextGenerator::CreateText(SceneObject *obj, std::string &text, Texture* tex, float uvScale) {
-        auto script = obj->AddScript<TextScript>();
-        script->positions.reserve(text.length());
-        script->uvScale = uvScale;
-        float startX = 0.0f; // Save the initial X position for carriage returns
+
+    Mesh *TextGenerator::CreateTextMesh(std::string &text, float scale, glm::vec2* totalTextSize) {
+        float startX = 0.0f;
         float x = startX;
-        float y = 0.0f;
-        int i = 0;
+        float y = 0.0f; // This is now the TOP-LEFT of the text block
 
-        float totalWidth = 0;
-        float maxHeight = 0;
-        float minHeight = 0;
-        float currentX = 0;
-        float currentY = 0;
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
 
-        std::vector<ModelComponent*> models;
+        vertices.reserve(text.length() * 4);
+        indices.reserve(text.length() * 6);
+
+        unsigned int baseInd[6] = { 0, 2, 1, 0, 3, 2 };
+        unsigned int startIdx = 0;
+        float xright = 0;
+        float ydown = 0;
 
         for (auto c : text) {
+            if (Get().characters.find(c) == Get().characters.end()) {
+                continue;
+            }
+
             if (c == '\n') {
                 x = startX;
-                y -= Get().lineSpacing;
+                y -= (Get().lineSpacing * scale);
                 continue;
             }
 
             Character ch = Get().characters[c];
 
-            float xpos = x + ch.bearing.x;
-            float ypos = y + ch.bearing.y;
+            float baselineY = y - (Get().ascender * scale);
 
-            auto pos = glm::vec2(xpos, ypos);
+            float xpos = x + (ch.bearing.x * scale);
+            float ypos = baselineY + (ch.bearing.y * scale);
 
-            auto model = obj->AddComponent<ModelComponent>();
-            models.push_back(model);
-            model->mesh = ch.mesh;
-            model->mat = ResourceManager::CreateMaterial(uuids::to_string(obj->uuid)+":"+text+":"+std::to_string(i));
-            model->mat->textures.push_back(ch.tex);
-            model->mat->textures.push_back(tex);
-            model->mat->shader = ResourceManager::LoadShaderProgram("text_shader", "./shaders/vertex/text.vert", "./shaders/fragment/text.frag");
-            script->positions.push_back(pos);
-            model->mat->AddInfo("symbolPos", &script->positions[i], UniformType::Vec2);
-            model->mat->AddInfo("uvScale", &script->uvScale, UniformType::Float);
+            for (auto vertex : ch.baseMesh) {
+                vertex.position = (vertex.position * scale) + glm::vec3(xpos, ypos, 0);
+                vertices.push_back(vertex);
+                if (vertex.position.x > xright) xright = vertex.position.x;
+                if (vertex.position.y < ydown) ydown = vertex.position.y;
+            }
 
-            float top = currentY + ch.bearing.y;
-            float bottom = top - ch.size.y;
-            if (top > maxHeight) maxHeight = top;
-            if (bottom < minHeight) minHeight = bottom;
-            x += ch.advance;
-            if (x > totalWidth) totalWidth = x;
-            i++;
-        }
-        float totalHeight = maxHeight - minHeight;
-        script->totalTextSize = glm::vec2(totalWidth, totalHeight);
-        script->maxHeight = maxHeight;
+            for (auto idx : baseInd) {
+                indices.push_back(idx + startIdx);
+            }
 
-        for (auto model : models) {
-            model->mat->AddInfo("totalTextSize", &script->totalTextSize, UniformType::Vec2);
-            model->mat->AddInfo("textOriginY", &script->maxHeight, UniformType::Float);
+            startIdx += 4;
+            x += (ch.advance * scale);
         }
 
+        if (totalTextSize) *totalTextSize = glm::vec2(xright, -ydown);
+
+        std::hash<std::string> hasher;
+        size_t hashVal = hasher(text);
+        std::string batchName = "text_mesh_" + std::to_string(hashVal) + "_s" + std::to_string(scale);
+        return ResourceManager::LoadMesh(batchName, vertices, indices);
     }
 } // BiBuild

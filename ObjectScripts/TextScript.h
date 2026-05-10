@@ -7,16 +7,16 @@
 #include <vector>
 
 #include "ObjectScript.h"
+#include "../components/ModelComponent.h"
 #include "glm/vec2.hpp"
 
 namespace BiBuild {
     class TextScript : public ObjectScript{
     public:
         TextScript(SceneObject* owner) : ObjectScript(owner){}
-        std::vector<glm::vec2> positions;
         glm::vec2 totalTextSize;
-        float maxHeight;
-        float uvScale;
+        float uvScale = 1;
+        ModelComponent* textModel;
 
     };
 } // BiBuild

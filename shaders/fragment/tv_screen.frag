@@ -1,19 +1,22 @@
 #version 330 core
 
+
+
 in vec3 VertexColor;
 in vec3 FragPos;
-in vec2 textBlockUV;
 in vec3 Normal;
 in vec2 TexCoords;
 in mat3 TBN;
 out vec4 fragmentColor;
 
+
 struct Light {
+    // relative to camera position + w component determines light type (0 for directional, 1 for point, 2 for spotlight)
     vec4 position;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 attenuation;
+    vec4 ambient; // + w component can be used for directional/spot light direction x
+    vec4 diffuse; // + w component can be used for directional/spot light direction y
+    vec4 specular; // + w component can be used for directional/spot light direction z
+    vec4 attenuation; // x = constant, y = linear, z = quadratic, w = cutoff (for spotlights)
 };
 
 struct Material {
@@ -46,7 +49,10 @@ uniform samplerCube fogTex;
 uniform samplerCube nightCubeMapTex;
 
 uniform Material material;
-uniform float uvScale = 1.0;
+uniform float minX;
+uniform float minY;
+uniform float maxX;
+uniform float maxY;
 
 
 vec3 CalculateLighting(vec3 normal) {
@@ -54,10 +60,9 @@ vec3 CalculateLighting(vec3 normal) {
 
     vec3 amb_mat = material.ambient;
     vec3 diff_mat = material.diffuse.xyz;
-    if(material.texNum >= 2) {
-        vec2 scaledUV = textBlockUV * uvScale;
-        diff_mat = diff_mat * texture(material.textures[1], scaledUV).xyz;
-        amb_mat = amb_mat * texture(material.textures[1], scaledUV).xyz;
+    if(material.texNum >= 1) {
+        diff_mat = diff_mat*texture(material.textures[0], TexCoords).xyz;
+        amb_mat = amb_mat*texture(material.textures[0], TexCoords).xyz;
     }
     vec3 viewPos = inverse(view)[3].xyz;
     for(int i = 0; i < numLights; i++){
@@ -123,19 +128,24 @@ vec3 CalculateLighting(vec3 normal) {
     return result;
 }
 
+bool isInTVScreen(){
+    if(TexCoords.x >= minX && TexCoords.x <= maxX && TexCoords.y >= minY && TexCoords.y <= maxY){
+        return true;
+    }
+    return false;
+}
+
 void main() {
     float alpha = material.diffuse.w;
-
     if(material.texNum >= 1) {
-        alpha *= texture(material.textures[0], TexCoords).r;
+        alpha *= texture(material.textures[0], TexCoords).w;
     }
-
     if (alpha < 0.01) discard;
 
-    vec3 normal = Normal;
+    vec3 normal = normalize(Normal);
 
-    if(material.texNum >= 3){
-        normal = texture(material.textures[2], TexCoords).rgb;
+    if(material.texNum >= 2){
+        normal = texture(material.textures[1], TexCoords).rgb;
         normal = normal * 2.0 - 1.0;
         normal = normalize(TBN * normal);
     }
@@ -145,12 +155,25 @@ void main() {
     float dis = distance(viewPos, FragPos);
     float fogCoeficient = 0.0;
 
-    if(dis >= fogDistanceClose) fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
-    if(fogCoeficient==1) discard;
-
+    if(dis >= fogDistanceClose) {
+        fogCoeficient = clamp((dis - fogDistanceClose)/(fogDistanceFar-fogDistanceClose), 0.0, 1.0);
+    }
+    if(fogCoeficient == 1.0) discard;
     if(useSkybox == 1) fog = texture(fogTex, FragPos - viewPos).rgb;
 
-    vec4 color = vec4(mix(material.emission + CalculateLighting(normal), fog, fogCoeficient), alpha);
+    vec4 finalColor;
 
-    fragmentColor = color;
+    if(material.texNum >= 3 && isInTVScreen()){
+        // Calculates mapped UVs and flips the V axis vertically for libVLC playback
+        vec2 tCoords = vec2(
+        (TexCoords.x - minX) / (maxX - minX),
+        ((TexCoords.y - minY) / (maxY - minY))
+        );
+        finalColor = vec4(mix(texture(material.textures[2], tCoords).rgb, fog, fogCoeficient), alpha);
+    } else {
+        // Base material rendering
+        finalColor = vec4(mix(material.emission + CalculateLighting(normal), fog, fogCoeficient), alpha);
+    }
+
+    fragmentColor = finalColor;
 }

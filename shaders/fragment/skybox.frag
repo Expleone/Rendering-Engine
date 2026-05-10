@@ -14,6 +14,7 @@ struct Material {
 };
 
 uniform samplerCube cubeMapTex;
+uniform samplerCube nightCubeMapTex;
 uniform vec3 sunPos;
 
 uniform Material material;
@@ -28,6 +29,12 @@ void main() {
     float sunSize = 0.1;
     vec3 viewDir = normalize(TexCoords);
     vec4 skyColor = texture(cubeMapTex, TexCoords);
+    if(sunPos.y < 0.3) {
+        skyColor = mix(skyColor, texture(nightCubeMapTex, TexCoords), 1.0-sunPos.y/0.3);
+    }
+    if(sunPos.y <= 0.0) {
+        skyColor = texture(nightCubeMapTex, TexCoords);
+    }
 
     // Calculate alignment between current pixel and sun direction
     float alignment = dot(viewDir, sunPos);

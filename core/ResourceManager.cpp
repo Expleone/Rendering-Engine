@@ -166,7 +166,7 @@ namespace BiBuild {
         // Convert the unsigned short array to std::vector<unsigned int> for your base function
         std::vector<unsigned int> indexData(indices, indices + iSize);
 
-        return LoadMesh(name, vertexData, indexData);
+        return LoadMesh(name+":0", vertexData, indexData);
     }
 
     Mesh* ResourceManager::LoadMesh(const std::string& name, const std::string& filepath) {
@@ -182,10 +182,12 @@ namespace BiBuild {
     Mesh* ResourceManager::GetMesh(const std::string &name){
         auto it = Get().meshes.find(name + ":0");
         if (it != Get().meshes.end()) {
+            std::cout << "Mesh \"" << name << "\" found in cache." << std::endl;
             return it->second.get();
         }
         auto newMeshes = LoadMeshesFromFile(name);
         if (!newMeshes.empty()) return newMeshes[0];
+        std::cout << "Mesh \"" << name << "\" not found." << std::endl;
         return nullptr;
     }
 
@@ -207,16 +209,38 @@ namespace BiBuild {
             aiProcess_Triangulate            |
             aiProcess_JoinIdenticalVertices  |
             aiProcess_SortByPType            |
-            aiProcess_GenNormals             );
+            aiProcess_GenNormals             |
+            aiProcess_OptimizeMeshes         | // Merges meshes sharing the same material
+            aiProcess_OptimizeGraph);
 
         if( nullptr == ai_scene) {
             std::cerr << "Error loading the file: " << filepath << std::endl;
             return {};
         }
-        auto newMeshes = Get().processAssimpScene(ai_scene, filepath);
+        auto newMeshes = Get().processAssimpSceneMeshes(ai_scene, filepath);
 
         aiReleaseImport(ai_scene);
         return newMeshes;
+    }
+
+    void ResourceManager::LoadModelsFromFile(const std::string &filepath, SceneObject* parent, bool asSeparateObjects) {
+
+        const struct aiScene* ai_scene = aiImportFile( filepath.c_str(),
+            aiProcess_CalcTangentSpace       |
+            aiProcess_Triangulate            |
+            aiProcess_JoinIdenticalVertices  |
+            aiProcess_SortByPType            |
+            aiProcess_GenNormals             |
+            aiProcess_OptimizeMeshes         | // Merges meshes sharing the same material
+            aiProcess_OptimizeGraph);
+
+        if( nullptr == ai_scene) {
+            std::cerr << "Error loading the file: " << filepath << std::endl;
+            return;
+        }
+         Get().processAssimpSceneObjects(ai_scene, filepath, parent, asSeparateObjects);
+
+        aiReleaseImport(ai_scene);
     }
 
     ShaderProgram* ResourceManager::LoadShaderProgram(const std::string& name, const std::string& vertexFilepath, const std::string& fragmentFilepath) {
@@ -225,7 +249,7 @@ namespace BiBuild {
             return it->second.get();
         }
 
-        auto shader = std::make_unique<ShaderProgram>(fragmentFilepath, vertexFilepath);
+        auto shader = std::make_unique<ShaderProgram>(name, fragmentFilepath, vertexFilepath);
         ShaderProgram* ptr = shader.get();
         Get().shaderPrograms.emplace(name, std::move(shader));
 
@@ -261,11 +285,16 @@ namespace BiBuild {
         return nullptr;
     }
 
-    std::vector<Mesh *> ResourceManager::processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath){
+    std::vector<Mesh *> ResourceManager::processAssimpSceneMeshes(const struct aiScene *ai_scene, const std::string &filepath){
         if (!ai_scene->HasMeshes()) return {};
         std::vector<Mesh*> newMeshes;
+
         for (size_t i = 0; i < ai_scene->mNumMeshes; i ++) {
             std::string obj_name = filepath + ":" + std::to_string(i);
+            auto it = Get().meshes.find(obj_name);
+            if (it != Get().meshes.end()) {
+                newMeshes.push_back(it->second.get());
+            }
 
             auto* ai_mesh = ai_scene->mMeshes[i];
             std::vector<Vertex> vertices;
@@ -302,6 +331,104 @@ namespace BiBuild {
             newMeshes.push_back(ptr);
         }
         return newMeshes;
+    }
+
+
+    void ResourceManager::processAssimpSceneObjects(const struct aiScene *ai_scene, const std::string &filepath, SceneObject* parent, bool asSeparateObjects ) {
+        if (!ai_scene->HasMeshes()) return;
+        std::vector<Mesh*> newMeshes;
+        std::vector<Material*> newMaterials;
+
+        std::vector<unsigned int> meshMaterialIndices;
+
+        if (ai_scene->HasMaterials()) {
+            for (size_t i = 0; i < ai_scene->mNumMaterials; i++) {
+                aiMaterial* ai_mat = ai_scene->mMaterials[i];
+                std::string mat_name = filepath + "_mat_" + std::to_string(i);
+
+                auto it = Get().materials.find(mat_name);
+                if (it != Get().materials.end()) {
+                    newMaterials.push_back(it->second.get());
+                } else {
+                    auto material = std::make_unique<Material>();
+
+                    // Extract material properties here. Example: Diffuse Color
+                    aiColor4D diffuse;
+                    if (AI_SUCCESS == aiGetMaterialColor(ai_mat, AI_MATKEY_COLOR_DIFFUSE, &diffuse)) {
+                        material->diffuse = glm::vec4(diffuse.r, diffuse.g, diffuse.b, diffuse.a);
+                        material->ambient = material->diffuse * 0.3f; // Simple ambient approximation
+                    }
+
+                    auto ptr = material.get();
+                    materials.emplace(mat_name, std::move(material));
+                    newMaterials.push_back(ptr);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < ai_scene->mNumMeshes; i ++) {
+            std::string obj_name = filepath + ":" + std::to_string(i);
+            auto it = Get().meshes.find(obj_name);
+            if (it != Get().meshes.end()) {
+                newMeshes.push_back(it->second.get());
+            }
+
+
+            auto* ai_mesh = ai_scene->mMeshes[i];
+            std::vector<Vertex> vertices;
+
+            meshMaterialIndices.push_back(ai_mesh->mMaterialIndex);
+
+            for (size_t j = 0; j < ai_mesh->mNumVertices; j++) {
+                Vertex v{};
+                v.position = glm::vec3(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z);
+                v.normal = glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z));
+                if (ai_mesh->HasTextureCoords(0)) {
+                    v.texCoords = glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y);
+                }
+                if (ai_mesh->HasTangentsAndBitangents()) {
+                    v.tangent = glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z);
+                    v.bitangent = glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z);
+                }
+                vertices.push_back(v);
+            }
+
+            std::vector<unsigned int> indices;
+
+            for (int j = 0; j < ai_mesh->mNumFaces; j++) {
+                auto ai_face = ai_mesh->mFaces[j];
+                if (ai_face.mNumIndices != 3) continue;
+                indices.push_back(ai_face.mIndices[0]);
+                indices.push_back(ai_face.mIndices[1]);
+                indices.push_back(ai_face.mIndices[2]);
+            }
+
+            auto mesh = std::make_unique<Mesh>(vertices,indices,obj_name);
+            auto ptr = mesh.get();
+            // mesh_comp->mesh = mesh.get();
+            std::cout << "Created mesh " << obj_name << " with " << vertices.size() << " vertices" << std::endl;
+            meshes.emplace(obj_name, std::move(mesh));
+            newMeshes.push_back(ptr);
+        }
+
+
+        auto obj = parent;
+        for (size_t i = 0; i < newMeshes.size(); i++) {
+            Mesh* mesh = newMeshes[i];
+            if (asSeparateObjects) {
+                obj = parent->scene->CreateObject(mesh->name);
+                parent->AddChild(obj);
+            }
+
+            auto model_comp = obj->AddComponent<ModelComponent>();
+            model_comp->mesh = mesh;
+
+            // Apply corresponding material
+            if (!newMaterials.empty() && meshMaterialIndices[i] < newMaterials.size()) {
+                model_comp->mat = newMaterials[meshMaterialIndices[i]];
+            }
+        }
+
     }
 
 }

@@ -17,16 +17,14 @@
 #include "imgui_impl_opengl3.h"
 #include "ResourceManager.h"
 #include "../helper_functions/helper.h"
-#include "../components/ModelComponent.h"
 #include  "SceneObject.h"
+#include "../components/ModelComponent.h"
 #include "ShaderProgram.h"
 #include "UniformBuffer.h"
 #include "../components/CameraComponent.h"
 #include "FrameBuffer.h"
 
 namespace BiBuild {
-    class SceneObject;
-    class ModelComponent;
 
     struct LightData {
         // relative to camera position + w component determines light type (0 for directional, 1 for point, 2 for spotlight)
@@ -60,16 +58,20 @@ namespace BiBuild {
         CameraComponent* camera = nullptr;
         LightsUBOStructure lightsUBOStruct{};
         bool useSkyboxTexAsFog = true;
-        FogUBOStructure fogUBOStruct{glm::vec4(0), 100, 300,  0};
+        FogUBOStructure fogUBOStruct{glm::vec4(0), 5, 10,  1};
         Texture* fogTex = nullptr;
+        Texture* nightFogTex = nullptr;
 
         FrameBuffer* uuidFBO = nullptr;
         ShaderProgram* uuidShader = nullptr;
         SceneManager* currentScene;
+        GLFWwindow* window = nullptr;
 
 
         // unsigned int gridVAO = 0, gridVBO = 0; // For drawing the 3D floor grid
         int screenWidth = 0, screenHeight = 0;
+        glm::vec3 * sunPosPointer;
+
 
         static RenderSystem& Get() {
             static RenderSystem instance;
@@ -88,7 +90,7 @@ namespace BiBuild {
         RenderSystem(const RenderSystem&) = delete;
         RenderSystem& operator=(const RenderSystem&) = delete;
 
-        static void Initialize(GLFWwindow *window, int width, int height, SceneObject *cameraObject);
+        static void Initialize(int width, int height, const char *winTitle, SceneObject *cameraObject);
 
         static void UpdateAndDraw(SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
         static void DrawIDs(const SceneManager &scene, const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
@@ -96,7 +98,16 @@ namespace BiBuild {
         static ShaderProgram* GetDefaultShader();
         static void SetDefaultShader(ShaderProgram* prg);
         static void SetFogTexture(Texture* tex);
+
+        static void SetNightFogTexture(Texture *tex);
+
         static Texture* GetFogTexture();
+
+        static Texture *GetNightFogTexture();
+
+        static void SetSunPosPointer(glm::vec3* pos);
+        static glm::vec3 GetSunPosition();
+
         static void SetUseSkyboxTexAsFog(bool use);
         static bool GetUseSkyboxTexAsFog();
         static void SetFogSettings(FogUBOStructure settings);
@@ -107,6 +118,7 @@ namespace BiBuild {
         static FogUBOStructure GetFogSettings();
         static FrameBuffer* GetUUIDFrameBuffer();
         static void DrawFullscreenQuad(GLuint textureID);
+        static GLFWwindow* GetGLFWWindow();
     };
 
 } // BiBuild

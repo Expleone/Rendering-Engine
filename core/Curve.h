@@ -120,7 +120,29 @@ namespace BiBuild {
 
             return C;
         }
+        static Curve createClosedLoop(const std::vector<glm::vec3>& control_points) {
+            std::vector<glm::vec3> looped_points = control_points;
+
+            for (int i = 0; i <= CURVE_DEGREE; ++i) {
+                looped_points.push_back(control_points[i % control_points.size()]);
+            }
+
+            // Calculate sizes BEFORE looped_points is moved
+            int knotsNum = looped_points.size() + CURVE_DEGREE + 1;
+            int active_intervals = control_points.size();
+
+            // Call existing constructor (looped_points is moved here and becomes empty)
+            Curve curve(looped_points);
+
+            // Replace the clamped knot vector with a uniform periodic knot vector
+            for (int i = 0; i < knotsNum; ++i) {
+                curve.knots[i] = static_cast<float>(i - CURVE_DEGREE) / static_cast<float>(active_intervals);
+            }
+
+            return curve;
+        }
     };
+
 } // BiBuild
 
 #endif //VIEWER_CURVE_H

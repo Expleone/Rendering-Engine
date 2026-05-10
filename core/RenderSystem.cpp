@@ -10,23 +10,16 @@
 #include <array>
 #include <cstring>
 
+#include "InputHandler.h"
+
 
 namespace BiBuild {
+    class SkyboxScript;
 
-    void RenderSystem::Initialize(GLFWwindow *window, int width, int height, SceneObject* cameraObject) {
-        Get().screenWidth = width;
-        Get().screenHeight = height;
-        Get().camera = cameraObject ? cameraObject->GetComponent<CameraComponent>() : nullptr;
-        glfwSetWindowUserPointer(window, &Get());
-        glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int w, int h) {
-            if (auto* self = static_cast<RenderSystem*>(glfwGetWindowUserPointer(win))) {
-                self->OnWindowResize(win, w, h);
-            }
-        });
-        if (Get().camera) {
-            Get().camera->aspectRatio = static_cast<float>(Get().screenWidth) / static_cast<float>(Get().screenHeight);
-        }
-
+    void RenderSystem::Initialize(int width, int height, const char* winTitle, SceneObject* cameraObject) {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
         glfwWindowHint(GLFW_RED_BITS, 8);
@@ -37,6 +30,35 @@ namespace BiBuild {
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
 
         glfwWindowHint(GLFW_STENCIL_BITS, 8);
+        glfwWindowHint(GLFW_SAMPLES, 10);
+        Get().window = glfwCreateWindow(width, height, winTitle, nullptr, nullptr);
+        if (!Get().window) {
+            glfwTerminate();
+            std::cerr << "Failed to create GLFW window" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        glfwMakeContextCurrent(Get().window);
+        glfwSwapInterval(1); //
+        Get().screenWidth = width;
+        Get().screenHeight = height;
+        Get().camera = cameraObject ? cameraObject->GetComponent<CameraComponent>() : nullptr;
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+            std::cerr << "Failed to initialize GLAD" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        glfwSetWindowUserPointer(Get().window, &Get());
+        glfwSetFramebufferSizeCallback(Get().window, [](GLFWwindow* win, int w, int h) {
+            if (auto* self = static_cast<RenderSystem*>(glfwGetWindowUserPointer(win))) {
+                self->OnWindowResize(win, w, h);
+            }
+        });
+        if (Get().camera) {
+            Get().camera->aspectRatio = static_cast<float>(Get().screenWidth) / static_cast<float>(Get().screenHeight);
+        }
+
+
+        glEnable(GL_MULTISAMPLE);
 
         glViewport(0, 0, Get().screenWidth, Get().screenHeight);
 
@@ -47,14 +69,23 @@ namespace BiBuild {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_CULL_FACE);
-
+        // glEnable(GL_FRAMEBUFFER_SRGB);
         glCullFace(GL_BACK);
 
         glFrontFace(GL_CCW);
 
         // glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+        BiBuild::InputManager::Init(BiBuild::RenderSystem::GetGLFWWindow());
+
+        // Setup ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(Get().window, true);
+        ImGui_ImplOpenGL3_Init("#version 330 core");
 
         Get().defaultShader = ResourceManager::LoadShaderProgram("default", "./shaders/vertex/base.vert", "./shaders/fragment/base.frag");
         Get().uuidShader = ResourceManager::LoadShaderProgram("uuid", "./shaders/vertex/uuid.vert", "./shaders/fragment/uuid.frag");
@@ -143,7 +174,7 @@ namespace BiBuild {
             std::vector<ModelComponent*> models = obj->GetAllComponents<ModelComponent>();
 
             for (auto& model_comp : models) {
-                if (!model_comp || !model_comp->mesh) continue;
+                if (!model_comp || !model_comp->mesh || !model_comp->draw) continue;
 
                 auto* material = model_comp->mat;
 
@@ -180,6 +211,7 @@ namespace BiBuild {
         glClearBufferuiv(GL_COLOR, 0, clearColor);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_MULTISAMPLE);
 
         struct UniformBlock {
             glm::mat4 view;
@@ -190,17 +222,21 @@ namespace BiBuild {
 
         for (const std::unique_ptr<SceneObject>& objPtr : scene.objects) {
             SceneObject* obj = objPtr.get();
-            if (!obj || obj->name == "Skybox" || !obj->render || !obj->hasClickableParts) continue;
-
-            auto* model_comp = obj->GetComponent<ModelComponent>();
-            if (!model_comp || !model_comp->mesh || !model_comp->drawUUID) continue;
+            if (!obj || obj->name == "Skybox" || !obj->render) continue;
             uint32_t uuid_parts[4];
             auto bytes = obj->uuid.as_bytes();
             std::memcpy(uuid_parts, bytes.data(), 16);
-            Get().uuidShader->SetUniformVec4ui("uuid", uuid_parts[0], uuid_parts[1], uuid_parts[2], uuid_parts[3]);
-            model_comp->Draw(Get().uuidShader);
+            std::vector<ModelComponent*> models = obj->GetAllComponents<ModelComponent>();
+
+            for (auto& model_comp : models) {
+                if (!model_comp || !model_comp->mesh || !model_comp->drawUUID) continue;
+
+                Get().uuidShader->SetUniformVec4ui("uuid", uuid_parts[0], uuid_parts[1], uuid_parts[2], uuid_parts[3]);
+                model_comp->Draw(Get().uuidShader);
+            }
         }
         Get().uuidFBO->Unbind();
+        glEnable(GL_MULTISAMPLE);
     }
 
     SceneObject *RenderSystem::GetObjectFromScreen(int mx, int my) {
@@ -247,12 +283,33 @@ namespace BiBuild {
         Get().fogTex = tex;
         Get().fogUBOStruct.useTex = true;
     }
+    void RenderSystem::SetNightFogTexture(Texture *tex) {
+        Get().nightFogTex = tex;
+        Get().fogUBOStruct.useTex = true;
+    }
 
     Texture *RenderSystem::GetFogTexture() {
         if (Get().fogUBOStruct.useTex) {
             return  Get().fogTex;
         }
         return nullptr;
+    }
+    Texture *RenderSystem::GetNightFogTexture() {
+        if (Get().fogUBOStruct.useTex) {
+            return  Get().nightFogTex;
+        }
+        return nullptr;
+    }
+
+    void RenderSystem::SetSunPosPointer(glm::vec3* pos) {
+            Get().sunPosPointer = pos;
+    }
+
+    glm::vec3 RenderSystem::GetSunPosition() {
+        if (Get().sunPosPointer) {
+            return *Get().sunPosPointer;
+        }
+        return glm::vec3(0);
     }
 
     void RenderSystem::SetUseSkyboxTexAsFog(bool use) {
@@ -332,4 +389,7 @@ namespace BiBuild {
         glBindVertexArray(0);
     }
 
+    GLFWwindow* RenderSystem::GetGLFWWindow() {
+        return Get().window;
+    }
 } // BiBuild

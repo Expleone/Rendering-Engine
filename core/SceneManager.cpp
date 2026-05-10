@@ -28,7 +28,7 @@ namespace BiBuild {
 
     SceneObject*  SceneManager::CreateObject(const std::string& name) {
         auto uuid = Helper::genUUID();
-        auto obj = std::make_unique<SceneObject>(uuid, name);
+        auto obj = std::make_unique<SceneObject>(uuid, name, this);
 
         SceneObject* ptr = obj.get();
         objects.push_back(std::move(obj));
@@ -49,20 +49,26 @@ namespace BiBuild {
         return nullptr;
     }
 
-    SceneObject* SceneManager::CreateSkyBox(const std::vector<std::string>& faces) {
+    SceneObject* SceneManager::CreateSkyBox(const std::vector<std::string>& faces, const std::vector<std::string>& facesNight) {
         if (skybox) return skybox;
 
         auto uuid = Helper::genUUID();
-        auto obj = std::make_unique<SceneObject>(uuid, "Skybox");
+        auto obj = std::make_unique<SceneObject>(uuid, "Skybox", (SceneManager*)this);
         auto model = obj->AddComponent<ModelComponent>();
         model->mesh = ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
         model->mat = ResourceManager::CreateMaterial("SkyboxMaterial");
 
         auto skyboxTex = ResourceManager::LoadTextureCubeMap(faces);
+        auto nightSkyboxTex = ResourceManager::LoadTextureCubeMap(facesNight);
         if (skyboxTex->GetID() == 0) std::cout << "Warning: Couldn't load skybox" << std::endl;
-        if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(skyboxTex);
+        if (RenderSystem::GetUseSkyboxTexAsFog()) {
+            RenderSystem::SetFogTexture(skyboxTex);
+            RenderSystem::SetNightFogTexture(nightSkyboxTex);
+
+        }
         auto sunTex = ResourceManager::LoadTexture("resources/textures/skyboxes/outrun-sunset.png", GL_CLAMP_TO_BORDER, GL_NEAREST);
 
+        model->mat->textures.push_back(nightSkyboxTex);
         model->mat->textures.push_back(skyboxTex);
         model->mat->textures.push_back(sunTex);
         model->mat->shader = ResourceManager::LoadShaderProgram("SkyboxShader", "./shaders/vertex/skybox.vert", "./shaders/fragment/skybox.frag");
@@ -70,11 +76,13 @@ namespace BiBuild {
         auto sunlight = obj->AddComponent<LightComponent>();
         sunlight->type = LightType::Directional;
         sunlight->intensity = 1.0f;
-        sunlight->ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+        sunlight->ambient = glm::vec3(0.2, 0.2, 0.2);
         sunlight->diffuse = glm::vec3(0.9f, 0.9f, 0.8f);
         sunlight->specular = glm::vec3(1.0f, 1.0f, 1.0f);
         sunlight->direction = glm::vec3(0, -1.0f, 0);
-        obj->AddScript<SkyboxScript>();
+        auto scr = obj->AddScript<SkyboxScript>();
+        scr->nightTexture = nightSkyboxTex;
+        RenderSystem::SetSunPosPointer(&scr->sunPos);
 
         SceneObject* ptr = obj.get();
         if (rootObject != nullptr) {
@@ -87,9 +95,9 @@ namespace BiBuild {
     }
 
 
-    void SceneManager::ChangeSkyBox(const std::vector<std::string> &faces){
+    void SceneManager::ChangeSkyBox(const std::vector<std::string> &faces, const std::vector<std::string> &facesNight) {
         if (!skybox) {
-            CreateSkyBox(faces);
+            CreateSkyBox(faces, facesNight);
             return;
         }
         const auto model = skybox->GetComponent<ModelComponent>();
@@ -106,10 +114,10 @@ namespace BiBuild {
     }
 
     void SceneManager::UpdateScene() {
+        UpdateScripts();
         if (rootObject) {
             UpdateTransformHierarchy(rootObject->GetComponent<TransformComponent>(), glm::mat4(1));
         }
-        UpdateScripts();
     }
 
 

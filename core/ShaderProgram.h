@@ -48,8 +48,9 @@ namespace BiBuild {
         std::vector<AdditionalShaderInfo> shaderInfo;
 
     public:
-        ShaderProgram(const std::string& fragmentShaderPath, const std::string& vertexShaderPath) {
-
+        std::string name;
+        ShaderProgram(const std::string& name,const std::string& fragmentShaderPath, const std::string& vertexShaderPath) {
+            this->name = name;
             std::string vertexSource = Helper::read_file(vertexShaderPath.c_str());
             std::string fragmentSource = Helper::read_file(fragmentShaderPath.c_str());
             programID = createProgram(vertexSource.c_str(),
@@ -101,9 +102,9 @@ namespace BiBuild {
             GLint location = glGetUniformLocation(programID, name);
             locations.emplace(nameStr, static_cast<GLuint>(location));
             if (location == -1) {
-                std::cerr << "Warning: Uniform '" << name << "' not found in shader program." << std::endl;
+                std::cerr << "Warning: Uniform '" << name << "' not found in shader program \""<< this->name<<"\'." << std::endl;
             }else {
-                std::cout << "Uniform '" << name << "' location: " << location << std::endl;
+                std::cout << "Uniform '" << name << "' location: " << location <<"; in \"" << this->name << "\"."<< std::endl;
             }
 
             return location;
@@ -160,6 +161,9 @@ namespace BiBuild {
         }
 
         GLuint createProgram(const char* vShaderCode, const char* fShaderCode) {
+            // std::cout << name << ", vertex: " << std::endl<< vShaderCode << std::endl << "Fragment: " << std::endl << fShaderCode << std::endl << std::endl;
+
+
             GLuint vShader = compileShader(GL_VERTEX_SHADER, vShaderCode);
             GLuint fShader = compileShader(GL_FRAGMENT_SHADER, fShaderCode);
 

@@ -38,7 +38,10 @@ namespace BiBuild {
         }
 
 
-        std::vector<Mesh*> processAssimpScene(const struct aiScene *ai_scene, const std::string &filepath);
+        std::vector<Mesh*> processAssimpSceneMeshes(const struct aiScene *ai_scene, const std::string &filepath);
+
+        void processAssimpSceneObjects(const struct aiScene *ai_scene, const std::string &filepath,
+                                       SceneObject *parent, bool asSeparateObjects = false);
 
     public:
         ResourceManager(const ResourceManager&) = delete;
@@ -58,6 +61,9 @@ namespace BiBuild {
         static Mesh* DeleteMesh(const std::string& name, int idx);
 
         static std::vector<Mesh *> LoadMeshesFromFile(const std::string &filepath);
+
+        static void LoadModelsFromFile(const std::string &filepath, SceneObject *parent,
+                                               bool asSeparateObjects);
 
         static ShaderProgram* LoadShaderProgram(const std::string& name, const std::string& vertexFilepath, const std::string& fragmentFilepath);
         static ShaderProgram* GetShaderProgram(const std::string& name);

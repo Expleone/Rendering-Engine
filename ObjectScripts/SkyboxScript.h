@@ -16,10 +16,14 @@ namespace BiBuild {
 class SkyboxScript : public ObjectScript {
     double startTime;
     double prevTime{};
-    double coefficient = 1;//glm::pi<double>()/300;
+    double coefficient = glm::pi<double>()/10;
     LightComponent* sunlight;
+
+
 public:
     glm::vec3 sunPos{};
+    Texture *dayTexture = nullptr;
+    Texture *nightTexture = nullptr;
 
     SkyboxScript(SceneObject* owner) : ObjectScript(owner) {
         startTime = glfwGetTime();

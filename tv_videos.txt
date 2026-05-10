@@ -1,0 +1,4 @@
+./resources/videos/video1.mp4
+./resources/videos/video2.mp4
+./resources/videos/video3.mp4
+./resources/videos/video4.mp4
