@@ -22,6 +22,7 @@ namespace holubiho {
         auto nightFogTex = RenderSystem::GetNightFogTexture();
         GLuint textureUnit = 0;
         int tex2DCount = 0;
+        int cubeMapCount = 0;
 
 
         for (size_t i = 0; i < textures.size(); ++i) {
@@ -37,8 +38,14 @@ namespace holubiho {
 
                 else {
                     glBindTexture(GL_TEXTURE_CUBE_MAP, textures[i]->GetID());
-                    if (shaderProgram)
-                        shaderProgram->SetUniformInt("cubeMapTex", static_cast<int>(textureUnit));
+                    if (shaderProgram) {
+                        if (cubeMapCount == 0) {
+                            shaderProgram->SetUniformInt("nightCubeMapTex", static_cast<int>(textureUnit));
+                        } else {
+                            shaderProgram->SetUniformInt("cubeMapTex", static_cast<int>(textureUnit));
+                        }
+                    }
+                    cubeMapCount++;
                 }
                 textureUnit++;
             }

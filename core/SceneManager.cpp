@@ -68,9 +68,9 @@ namespace holubiho {
         }
         auto sunTex = ResourceManager::LoadTexture("resources/textures/skyboxes/outrun-sunset.png", GL_CLAMP_TO_BORDER, GL_NEAREST);
 
+        model->mat->textures.push_back(sunTex);
         model->mat->textures.push_back(nightSkyboxTex);
         model->mat->textures.push_back(skyboxTex);
-        model->mat->textures.push_back(sunTex);
         model->mat->shader = ResourceManager::LoadShaderProgram("SkyboxShader", "./shaders/vertex/skybox.vert", "./shaders/fragment/skybox.frag");
 
         auto sunlight = obj->AddComponent<LightComponent>();
@@ -104,13 +104,22 @@ namespace holubiho {
         if (!model) return;
         auto mat = model->mat;
         if (!mat) return;
-        auto newTexture = ResourceManager::LoadTextureCubeMap(faces);
-        if (!mat->textures.empty()) {
-            mat->textures[0] = newTexture;
-        }else {
-            mat->textures.push_back(newTexture);
+        auto newDayTexture = ResourceManager::LoadTextureCubeMap(faces);
+        auto newNightTexture = ResourceManager::LoadTextureCubeMap(facesNight);
+
+        if (mat->textures.empty()) {
+            return;
         }
-        if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(newTexture);
+
+        if (mat->textures.size() < 3) {
+            mat->textures.resize(3, nullptr);
+        }
+
+        mat->textures[1] = newNightTexture;
+        mat->textures[2] = newDayTexture;
+
+        if (RenderSystem::GetUseSkyboxTexAsFog()) RenderSystem::SetFogTexture(newDayTexture);
+        RenderSystem::SetNightFogTexture(newNightTexture);
     }
 
     void SceneManager::UpdateScene() {

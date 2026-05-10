@@ -43,6 +43,7 @@ public:
             else if (nrChannels == 3) format = GL_RGB;
             else if (nrChannels == 4) format = GL_RGBA;
 
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
             if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
         } else {
@@ -74,6 +75,7 @@ public:
             else if (nrChannels == 3) format = GL_RGB;
             else if (nrChannels == 4) format = GL_RGBA;
 
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
             if (mipmap) glGenerateMipmap(GL_TEXTURE_2D);
         } else {
@@ -91,6 +93,7 @@ public:
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
 
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         for (int i = 0; i < faces.size(); i++) {
             auto& face = faces[i];
             int width, height, nrChannels;
@@ -100,6 +103,7 @@ public:
                 if (nrChannels == 1) format = GL_RED;
                 else if (nrChannels == 3) format = GL_RGB;
                 else if (nrChannels == 4) format = GL_RGBA;
+
 
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, static_cast<GLint>(format), width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
@@ -144,6 +148,7 @@ public:
     void UpdateTexture(void* data, int width, int height, GLuint format) const {
         glBindTexture(GL_TEXTURE_2D, texId);
 
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height,format, GL_UNSIGNED_BYTE, data);
 
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -154,6 +159,7 @@ public:
     void UpdateTexture(void* data, int xoffset, int yoffset, int width, int height, GLuint format) const {
         glBindTexture(GL_TEXTURE_2D, texId);
 
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,format, GL_UNSIGNED_BYTE, data);
 
         glGenerateMipmap(GL_TEXTURE_2D);
