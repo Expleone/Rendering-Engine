@@ -4,5 +4,5 @@
 
 #include "Texture.h"
 
-namespace BiBuild {
+namespace holubiho {
 } // BiBuild

@@ -7,7 +7,7 @@
 #include "FilmScript.h"
 #include "ObjectScript.h"
 
-namespace BiBuild {
+namespace holubiho {
     class TVScript : public ObjectScript {
         FilmScript* filmScript;
         bool isPaused = true;

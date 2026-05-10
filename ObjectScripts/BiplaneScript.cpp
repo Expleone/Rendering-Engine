@@ -9,7 +9,7 @@
 #include "glm/ext/quaternion_trigonometric.hpp"
 #include "../components/ModelComponent.h"
 
-namespace BiBuild {
+namespace holubiho {
 
 
     void BiplaneScript::Update() {

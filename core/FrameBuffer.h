@@ -8,7 +8,7 @@
 
 #include "glad/glad.h"
 
-namespace BiBuild {
+namespace holubiho {
     class FrameBuffer {
         GLuint fbo = 0;
         GLuint frameBuffTex = 0;

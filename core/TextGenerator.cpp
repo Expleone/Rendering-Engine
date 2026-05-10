@@ -7,7 +7,7 @@
 #include "../components/ModelComponent.h"
 #include "../ObjectScripts/TextScript.h"
 
-namespace BiBuild {
+namespace holubiho {
     class TextScript;
 
     TextScript* TextGenerator::CreateText(SceneObject *obj, std::string text, float scale, glm::vec3 color) {

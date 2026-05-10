@@ -9,7 +9,7 @@
 #include "../core/SceneObject.h"
 #include "../core/InputHandler.h"
 
-namespace BiBuild {
+namespace holubiho {
     CameraComponent::CameraComponent(SceneObject* owner) : Component(owner) {
         if (auto transform = owner->GetComponent<TransformComponent>()) {
             transform->inheritScale = false;

@@ -7,7 +7,7 @@
 #include <cmath>
 
 
-namespace BiBuild {
+namespace holubiho {
     void FilmScript::Update() {
         if (!tex || !videoPlaybackEnabled || !media_player) return;
 

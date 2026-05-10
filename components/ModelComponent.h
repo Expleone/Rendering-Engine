@@ -18,7 +18,7 @@
 #include "../core/Material.h"
 #include "../core/Mesh.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     class ModelComponent : public Component {
     public:

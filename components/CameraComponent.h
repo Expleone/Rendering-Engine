@@ -16,7 +16,7 @@
 #endif
 #include "GLFW/glfw3.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     enum class ProjectionType{Perspective, Orthographic};
 

@@ -13,7 +13,7 @@
 #include "../core/InputHandler.h"
 #include "../components/ModelComponent.h"
 
-namespace BiBuild {
+namespace holubiho {
     class CameraScript : public ObjectScript {
         CameraComponent* camera;
         float movementSpeed = 10.0f;

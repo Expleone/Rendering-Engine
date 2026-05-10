@@ -6,7 +6,7 @@
 #define VIEWER_VERTEXBUFFER_H
 
 #include <glad/glad.h>
-namespace BiBuild {
+namespace holubiho {
     class VertexBuffer {
     public:
         GLuint ID{};

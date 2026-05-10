@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "Component.h"
-namespace BiBuild {
+namespace holubiho {
     class TransformComponent : public Component {
     public:
         enum class TransformSpace {

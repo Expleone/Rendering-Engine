@@ -5,7 +5,7 @@
 #ifndef VIEWER_OBJECTSCRIPT_H
 #define VIEWER_OBJECTSCRIPT_H
 
-namespace BiBuild {
+namespace holubiho {
     class SceneObject;
 
     class ObjectScript {

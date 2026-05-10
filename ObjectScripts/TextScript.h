@@ -10,7 +10,7 @@
 #include "../components/ModelComponent.h"
 #include "glm/vec2.hpp"
 
-namespace BiBuild {
+namespace holubiho {
     class TextScript : public ObjectScript{
     public:
         TextScript(SceneObject* owner) : ObjectScript(owner){}

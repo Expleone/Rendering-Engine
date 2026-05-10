@@ -4,7 +4,7 @@
 
 #include "VertexArray.h"
 
-namespace BiBuild {
+namespace holubiho {
     VertexArray::VertexArray() {
         glGenVertexArrays(1, &ID);
     }

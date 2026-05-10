@@ -13,7 +13,7 @@
 #include "InputHandler.h"
 
 
-namespace BiBuild {
+namespace holubiho {
     class SkyboxScript;
 
     void RenderSystem::Initialize(int width, int height, const char* winTitle, SceneObject* cameraObject) {
@@ -77,7 +77,7 @@ namespace BiBuild {
         // glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        BiBuild::InputManager::Init(BiBuild::RenderSystem::GetGLFWWindow());
+        holubiho::InputManager::Init(holubiho::RenderSystem::GetGLFWWindow());
 
         // Setup ImGui context
         IMGUI_CHECKVERSION();

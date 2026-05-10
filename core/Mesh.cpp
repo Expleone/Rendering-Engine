@@ -6,7 +6,7 @@
 
 #include "ShaderProgram.h"
 #include "../helper_functions/helper.h"
-namespace BiBuild{
+namespace holubiho{
     Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::string& name)
         : id(Helper::genUUID()), name(name), vertices(vertices), indices(indices), vbo(vertices.data(), vertices.size() * sizeof(Vertex)), vao(), ebo(indices.data(), indices.size()) {
 

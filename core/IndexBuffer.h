@@ -5,7 +5,7 @@
 #ifndef VIEWER_INDEXBUFFER_H
 #define VIEWER_INDEXBUFFER_H
 #include <glad/glad.h>
-namespace BiBuild {
+namespace holubiho {
 
     class IndexBuffer {
     public:

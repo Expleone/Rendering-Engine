@@ -4,7 +4,7 @@
 
 #include "VertexBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
     VertexBuffer::VertexBuffer(const void* data, GLsizeiptr size) {
         glGenBuffers(1, &ID);
         glBindBuffer(GL_ARRAY_BUFFER, ID);

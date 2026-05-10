@@ -4,7 +4,7 @@
 
 #include "TVScript.h"
 
-namespace BiBuild {
+namespace holubiho {
     void TVScript::Update() {
         if (isPaused && currentContent == -1 && filmScript && !content.empty()) {
             filmScript->SetVideo(content[0].c_str());

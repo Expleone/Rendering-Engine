@@ -8,7 +8,7 @@
 #include "../components/ModelComponent.h"
 #include "../core/ResourceManager.h"
 
-namespace BiBuild {
+namespace holubiho {
     class OutlineScript : public ObjectScript{
         ModelComponent* model;
     public:

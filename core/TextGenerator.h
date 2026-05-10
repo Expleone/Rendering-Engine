@@ -19,7 +19,7 @@
 #define BB_ATLAS_PADDING 5
 #define MAX_ATLAS_SIZE 8192 // Must be at least the sum of widths of all characters plus padding
 
-namespace BiBuild {
+namespace holubiho {
     class TextScript;
     class ModelComponent;
 

@@ -43,11 +43,11 @@ bool Debug = false;
 
 void changeMainShader() {
     static bool isChanged = false;
-    static auto prevShader = BiBuild::ResourceManager::GetShaderProgram("phong");
-    if (BiBuild::InputManager::IsKeyPressed(GLFW_KEY_P)) {
+    static auto prevShader = holubiho::ResourceManager::GetShaderProgram("phong");
+    if (holubiho::InputManager::IsKeyPressed(GLFW_KEY_P)) {
         if (isChanged) return;
-        auto tmp = BiBuild::RenderSystem::GetDefaultShader();
-        BiBuild::RenderSystem::SetDefaultShader(prevShader);
+        auto tmp = holubiho::RenderSystem::GetDefaultShader();
+        holubiho::RenderSystem::SetDefaultShader(prevShader);
         prevShader = tmp;
         isChanged = true;
     }
@@ -60,7 +60,7 @@ void CheckInteraction() {
     static bool intChck = false;
     static bool debugChecked = false;
 
-    if (BiBuild::InputManager::IsActionActive("ToggleDebug")) {
+    if (holubiho::InputManager::IsActionActive("ToggleDebug")) {
         if (!debugChecked){
             Debug = !Debug;
             debugChecked = true;
@@ -70,12 +70,12 @@ void CheckInteraction() {
         debugChecked = false;
     }
 
-    if (BiBuild::InputManager::GetMouseMode() != GLFW_CURSOR_NORMAL || Debug) return;
+    if (holubiho::InputManager::GetMouseMode() != GLFW_CURSOR_NORMAL || Debug) return;
 
-    if (BiBuild::InputManager::IsActionActive("Interact")) {
+    if (holubiho::InputManager::IsActionActive("Interact")) {
         if (intChck) return;
         intChck = true;
-        if (auto* obj = BiBuild::InputManager::ObjectUnderMouse()) {
+        if (auto* obj = holubiho::InputManager::ObjectUnderMouse()) {
             obj->hasBeenInteracted = true;
             std::cout << obj->name<<std::endl;
         }
@@ -85,9 +85,9 @@ void CheckInteraction() {
 
 }
 
-void DrawDebug(BiBuild::SceneManager* scene) {
+void DrawDebug(holubiho::SceneManager* scene) {
     static bool clickEvaluated = false;
-    static BiBuild::SceneObject* currentObject = nullptr;
+    static holubiho::SceneObject* currentObject = nullptr;
     static float pos[3] = {0,0,0};
     static float rotation[3] = {0,0,0};
     static float scale = 0.01f;
@@ -105,7 +105,7 @@ void DrawDebug(BiBuild::SceneManager* scene) {
         if (scene->objects[i]) {
             // Push an ID so ImGui doesn't get confused if two objects have the same name
             ImGui::PushID(i);
-            if (scene->objects[i]->GetComponent<BiBuild::ModelComponent>()) {
+            if (scene->objects[i]->GetComponent<holubiho::ModelComponent>()) {
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255)); // Highlight selected object in yellow
             }
             // Selectable returns true if it was clicked this frame
@@ -123,7 +123,7 @@ void DrawDebug(BiBuild::SceneManager* scene) {
                 rotation[1] = euler.y;
                 rotation[2] = euler.z;
             }
-            if (scene->objects[i]->GetComponent<BiBuild::ModelComponent>()) {
+            if (scene->objects[i]->GetComponent<holubiho::ModelComponent>()) {
                 ImGui::PopStyleColor();
             }
             ImGui::PopID();
@@ -132,11 +132,11 @@ void DrawDebug(BiBuild::SceneManager* scene) {
 
     ImGui::End();
 
-    if (BiBuild::InputManager::IsActionActive("Interact") && BiBuild::InputManager::GetMouseMode() == GLFW_CURSOR_NORMAL && !io.WantCaptureMouse) {
+    if (holubiho::InputManager::IsActionActive("Interact") && holubiho::InputManager::GetMouseMode() == GLFW_CURSOR_NORMAL && !io.WantCaptureMouse) {
         if (!clickEvaluated) {
             clickEvaluated = true;
 
-            currentObject = BiBuild::InputManager::ObjectUnderMouse();
+            currentObject = holubiho::InputManager::ObjectUnderMouse();
             if (!currentObject) return;
             pos[0] = currentObject->transform->localPosition.x;
             pos[1] = currentObject->transform->localPosition.y;
@@ -182,10 +182,10 @@ void DrawDebug(BiBuild::SceneManager* scene) {
 
 
 
-    BiBuild::CameraComponent* camera = scene->cameraObject ? scene->cameraObject->GetComponent<BiBuild::CameraComponent>() : nullptr;
+    holubiho::CameraComponent* camera = scene->cameraObject ? scene->cameraObject->GetComponent<holubiho::CameraComponent>() : nullptr;
 
     if (!camera) return;
-    auto cameraScript =  camera->GetOwner()->GetScript<BiBuild::CameraScript>();
+    auto cameraScript =  camera->GetOwner()->GetScript<holubiho::CameraScript>();
     if (!cameraScript) return;
     ImGui::Begin("Controls");
     ImGui::SliderFloat("Zoom", &camera->fov, 1.0f, 180.0f);
@@ -194,7 +194,7 @@ void DrawDebug(BiBuild::SceneManager* scene) {
     ImGui::End();
 
     static bool actionChecked = false;
-    if (BiBuild::InputManager::IsActionActive("ToggleUUID")) {
+    if (holubiho::InputManager::IsActionActive("ToggleUUID")) {
         if (!actionChecked) {
             DrawUUID = !DrawUUID;
             actionChecked = true;
@@ -203,7 +203,7 @@ void DrawDebug(BiBuild::SceneManager* scene) {
         actionChecked = false;
     }
     if (DrawUUID) {
-        BiBuild::RenderSystem::DrawFullscreenQuad(BiBuild::RenderSystem::GetUUIDFrameBuffer()->GetTexture());
+        holubiho::RenderSystem::DrawFullscreenQuad(holubiho::RenderSystem::GetUUIDFrameBuffer()->GetTexture());
     }
 
 }
@@ -215,37 +215,37 @@ int main() {
 
 
     // Initialize GLAD
-    BiBuild::SceneManager scene = BiBuild::SceneManager();
-    BiBuild::RenderSystem::Initialize(WIN_WIDTH,WIN_HEIGHT, WIN_TITLE, scene.cameraObject);
+    holubiho::SceneManager scene = holubiho::SceneManager();
+    holubiho::RenderSystem::Initialize(WIN_WIDTH,WIN_HEIGHT, WIN_TITLE, scene.cameraObject);
 
 
     scene.CreateSkyBox(skyboxFaces, nightSkyboxFaces);
     // BiBuild::RenderSystem::SetFogTexture(scene.skybox->GetComponent<BiBuild::ModelComponent>()->mat->textures[0]);
-    BiBuild::ResourceManager::LoadShaderProgram("phong", "./shaders/vertex/base.vert", "./shaders/fragment/basePhong.frag");
-    auto* vegetationShader = BiBuild::ResourceManager::LoadShaderProgram("vegetationShader", "./shaders/vertex/vegetation.vert", "./shaders/fragment/base.frag");
-    vegetationShader->AddInfo("windDir", &windDir, BiBuild::UniformType::Vec3);
-    vegetationShader->AddInfo("windStrength", &windStrength, BiBuild::UniformType::Float);
-    vegetationShader->AddInfo("windSpeed", &windSpeed, BiBuild::UniformType::Float);
-    vegetationShader->AddInfo("time", BiBuild::Time::fCurrentTimePointer(), BiBuild::UniformType::Float);
+    holubiho::ResourceManager::LoadShaderProgram("phong", "./shaders/vertex/base.vert", "./shaders/fragment/basePhong.frag");
+    auto* vegetationShader = holubiho::ResourceManager::LoadShaderProgram("vegetationShader", "./shaders/vertex/vegetation.vert", "./shaders/fragment/base.frag");
+    vegetationShader->AddInfo("windDir", &windDir, holubiho::UniformType::Vec3);
+    vegetationShader->AddInfo("windStrength", &windStrength, holubiho::UniformType::Float);
+    vegetationShader->AddInfo("windSpeed", &windSpeed, holubiho::UniformType::Float);
+    vegetationShader->AddInfo("time", holubiho::Time::fCurrentTimePointer(), holubiho::UniformType::Float);
 
-    auto* waterShader = BiBuild::ResourceManager::LoadShaderProgram("waterShader", "./shaders/vertex/water.vert", "./shaders/fragment/base.frag");
-    waterShader->AddInfo("moveStrength", &waveHeight, BiBuild::UniformType::Float);
-    waterShader->AddInfo("moveSpeed", &waveSpeed, BiBuild::UniformType::Float);
-    waterShader->AddInfo("time", BiBuild::Time::fCurrentTimePointer(), BiBuild::UniformType::Float);
+    auto* waterShader = holubiho::ResourceManager::LoadShaderProgram("waterShader", "./shaders/vertex/water.vert", "./shaders/fragment/base.frag");
+    waterShader->AddInfo("moveStrength", &waveHeight, holubiho::UniformType::Float);
+    waterShader->AddInfo("moveSpeed", &waveSpeed, holubiho::UniformType::Float);
+    waterShader->AddInfo("time", holubiho::Time::fCurrentTimePointer(), holubiho::UniformType::Float);
 
 
-    BiBuild::TextGenerator::Init("resources/fonts/arial/ARIAL.TTF");
+    holubiho::TextGenerator::Init("resources/fonts/arial/ARIAL.TTF");
     SetupInputBindings();
 
 
     auto camera = SetupCamera(&scene, &Debug);
-    auto cameraScript = camera->GetScript<BiBuild::CameraScript>();
-    auto cameraComp = camera->GetComponent<BiBuild::CameraComponent>();
+    auto cameraScript = camera->GetScript<holubiho::CameraScript>();
+    auto cameraComp = camera->GetComponent<holubiho::CameraComponent>();
 
 
 
     auto outline = scene.CreateObject("Outline");
-    outline->AddScript<BiBuild::OutlineScript>();
+    outline->AddScript<holubiho::OutlineScript>();
 
     auto tv = SetupTv(&scene);
     cameraScript->SetTVObject(tv);
@@ -257,12 +257,12 @@ int main() {
 
 
     auto sceneObjs = scene.CreateObject("sceneObjs");
-    BiBuild::ResourceManager::LoadModelsFromFile("resources/scene/Scene.obj", sceneObjs, true);
+    holubiho::ResourceManager::LoadModelsFromFile("resources/scene/Scene.obj", sceneObjs, true);
     auto children = sceneObjs->GetChildren();
-    children[4]->GetComponent<BiBuild::ModelComponent>()->mat->shader = waterShader;
-    children[9]->GetComponent<BiBuild::ModelComponent>()->mat->shader = vegetationShader;
-    children[7]->GetComponent<BiBuild::ModelComponent>()->mat->shader = vegetationShader;
-    children[6]->GetComponent<BiBuild::ModelComponent>()->mat->shader = vegetationShader;
+    children[4]->GetComponent<holubiho::ModelComponent>()->mat->shader = waterShader;
+    children[9]->GetComponent<holubiho::ModelComponent>()->mat->shader = vegetationShader;
+    children[7]->GetComponent<holubiho::ModelComponent>()->mat->shader = vegetationShader;
+    children[6]->GetComponent<holubiho::ModelComponent>()->mat->shader = vegetationShader;
     sceneObjs->transform->localScale = glm::vec3(10.0f);
 
 
@@ -275,11 +275,11 @@ int main() {
 
 
     auto sign = scene.CreateObject("sign");
-    BiBuild::ResourceManager::LoadModelsFromFile("resources/Sign.glb", sign, false );
+    holubiho::ResourceManager::LoadModelsFromFile("resources/Sign.glb", sign, false );
     auto text = scene.CreateObject("text");
     text->hasClickableParts = false;
     std::string textContent = "TV usage:\n- Interact with the green button to \nplay/pause videos.\n- Use the red and orange buttons to \nswitch between videos.\n- Enjoy the show!";
-    auto textScript = BiBuild::TextGenerator::CreateText(text, textContent, 0.0007, {1.0f, 0, 0});
+    auto textScript = holubiho::TextGenerator::CreateText(text, textContent, 0.0007, {1.0f, 0, 0});
     sign->AddChild(text);
     text->transform->localPosition = glm::vec3(0.02, 2.429f, 1.135f);
     text->transform->localRotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(0,1,0));
@@ -288,16 +288,16 @@ int main() {
     sign->transform->localScale = glm::vec3(0.578f);
 
     auto boat = scene.CreateObject("boat");
-    BiBuild::ResourceManager::LoadModelsFromFile("resources/low_poly_boat.glb", boat, false);
+    holubiho::ResourceManager::LoadModelsFromFile("resources/low_poly_boat.glb", boat, false);
     boat->transform->localPosition = glm::vec3(-10.123f, 0.069f, -9.469f);
     boat->transform->localRotation = glm::angleAxis(glm::radians(-70.0f), glm::vec3(0,1,0)) * glm::angleAxis(glm::radians(15.0f), glm::vec3(1,0,0));
     boat->transform->localScale = glm::vec3(0.547f);
 
 
-    while (!glfwWindowShouldClose(BiBuild::RenderSystem::GetGLFWWindow())) {
-        BiBuild::Time::UpdateTime();
+    while (!glfwWindowShouldClose(holubiho::RenderSystem::GetGLFWWindow())) {
+        holubiho::Time::UpdateTime();
         static bool keybiningsReloaded = false;
-        if (BiBuild::InputManager::IsActionActive("ReloadKeybindings")) {
+        if (holubiho::InputManager::IsActionActive("ReloadKeybindings")) {
              if (!keybiningsReloaded) {
                  SetupInputBindings();
                  LoadTVVideosTXT("tv_videos.txt", tv);
@@ -315,14 +315,14 @@ int main() {
             framen = 0;
         }
 
-        BiBuild::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
+        holubiho::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
         // changeMainShader();
-        BiBuild::RenderSystem::UpdateAndDraw(
+        holubiho::RenderSystem::UpdateAndDraw(
             scene,
             cameraComp->BuildCameraViewMatrix(),
             cameraComp->GetProjectionMat()
         );
-        BiBuild::RenderSystem::DrawIDs(scene,
+        holubiho::RenderSystem::DrawIDs(scene,
             cameraComp->BuildCameraViewMatrix(),
             cameraComp->GetProjectionMat()
         );
@@ -336,7 +336,7 @@ int main() {
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(BiBuild::RenderSystem::GetGLFWWindow());
+        glfwSwapBuffers(holubiho::RenderSystem::GetGLFWWindow());
     }
 
     // Cleanup
@@ -344,7 +344,7 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(BiBuild::RenderSystem::GetGLFWWindow());
+    glfwDestroyWindow(holubiho::RenderSystem::GetGLFWWindow());
     glfwTerminate();
     return 0;
 }

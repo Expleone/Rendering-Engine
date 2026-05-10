@@ -8,7 +8,7 @@
 #include "Component.h"
 #include "glm/vec3.hpp"
 
-namespace BiBuild {
+namespace holubiho {
     enum class LightType : int { Directional = 0, Point = 1,  Spotlight = 2 };
 
     class LightComponent : public Component {

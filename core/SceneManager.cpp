@@ -12,7 +12,7 @@
 #include "../ObjectScripts/SkyboxScript.h"
 #include "../test_models/cube.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     SceneManager::SceneManager() {
         // Initialize the hidden root object

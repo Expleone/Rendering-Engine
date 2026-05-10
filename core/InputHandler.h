@@ -15,7 +15,7 @@
 #include "SceneObject.h"
 #include "glm/vec2.hpp"
 
-namespace BiBuild {
+namespace holubiho {
 
     enum class InputDevice {
         KEYBOARD,

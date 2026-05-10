@@ -12,7 +12,7 @@
 #include "../helper_functions/helper.h"
 
 
-namespace BiBuild {
+namespace holubiho {
 
     class SceneManager {
     private:

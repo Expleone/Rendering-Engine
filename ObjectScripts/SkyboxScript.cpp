@@ -9,7 +9,7 @@
 #include "../core/Time.h"
 
 
-namespace BiBuild {
+namespace holubiho {
     void SkyboxScript::Update() {
         if (!sunlight) return;
 

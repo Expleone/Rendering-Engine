@@ -6,7 +6,7 @@
 
 #include "../components/ModelComponent.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     Texture *ResourceManager::GetTexture(const std::string &path) {
         auto it = Get().textures.find(path);

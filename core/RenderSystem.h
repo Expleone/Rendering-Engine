@@ -24,7 +24,7 @@
 #include "../components/CameraComponent.h"
 #include "FrameBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     struct LightData {
         // relative to camera position + w component determines light type (0 for directional, 1 for point, 2 for spotlight)

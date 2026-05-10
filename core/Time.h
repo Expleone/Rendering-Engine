@@ -7,7 +7,7 @@
 #include <chrono>
 
 
-namespace BiBuild {
+namespace holubiho {
 
 class Time {
     double deltaTime;

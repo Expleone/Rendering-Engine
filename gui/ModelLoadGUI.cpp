@@ -4,7 +4,7 @@
 
 #include "ModelLoadGUI.h"
 
-namespace BiBuild {
+namespace holubiho {
     std::string ModelLoadGUI::filepath = "";
     float ModelLoadGUI::scale = 1;
     float ModelLoadGUI::oldScale = 1;

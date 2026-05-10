@@ -7,7 +7,7 @@
 #include "ShaderProgram.h"
 #include "Texture.h"
 
-namespace BiBuild {
+namespace holubiho {
 
 
 class Material {

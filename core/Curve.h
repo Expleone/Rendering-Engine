@@ -11,7 +11,7 @@
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
 
-namespace BiBuild {
+namespace holubiho {
     class Curve {
     public:
         std::vector<glm::vec3> controlPoints;

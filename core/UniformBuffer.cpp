@@ -4,5 +4,5 @@
 
 #include "UniformBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
 } // BiBuild

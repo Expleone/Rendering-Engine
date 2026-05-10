@@ -6,7 +6,7 @@
 
 
 
-namespace BiBuild {
+namespace holubiho {
     void Time::UpdateTime() {
         auto nowTimePoint = std::chrono::steady_clock::now();
         Get().deltaTime = std::chrono::duration<double>(nowTimePoint - Get().lastTimePoint).count();

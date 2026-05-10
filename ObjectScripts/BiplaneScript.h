@@ -8,12 +8,12 @@
 #include "../core/SceneObject.h"
 #include "../core/Curve.h"
 
-namespace BiBuild {
+namespace holubiho {
     class BiplaneScript : public ObjectScript {
         SceneObject* airscrew = nullptr;
         SceneObject* plane = nullptr;
         std::unique_ptr<Curve> flightPath = nullptr;
-        std::vector<BiBuild::SceneObject*> controlPointObjects;
+        std::vector<holubiho::SceneObject*> controlPointObjects;
         float curveParam = 0.0f;
         float moveTime = 10.0f;
         bool prevDebugValue = true;

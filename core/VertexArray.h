@@ -8,7 +8,7 @@
 
 #include "VertexBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     class VertexArray {
     public:

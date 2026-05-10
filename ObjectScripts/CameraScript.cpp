@@ -9,7 +9,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 
-namespace BiBuild {
+namespace holubiho {
 
 
     void CameraScript::Update() {

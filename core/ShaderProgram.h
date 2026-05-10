@@ -14,7 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-namespace BiBuild {
+namespace holubiho {
     enum class UBOBinding : GLuint {
         Matrices = 0,
         Lights = 1,

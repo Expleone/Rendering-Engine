@@ -11,7 +11,7 @@
 #include "../core/SceneObject.h"
 #include "GLFW/glfw3.h"
 
-namespace BiBuild {
+namespace holubiho {
 
 class SkyboxScript : public ObjectScript {
     double startTime;

@@ -6,7 +6,7 @@
 
 #include "../components/TransformComponent.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     bool SceneObject::AddChild(SceneObject* child) {
         if (!child || child == this) return false;

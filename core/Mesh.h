@@ -17,7 +17,7 @@
 
 // #include "../components/MeshComponent.h"
 
-namespace BiBuild {
+namespace holubiho {
     struct Vertex {
         glm::vec3 position;  // Where the vertex is (X, Y, Z)
         glm::vec3 normal;    // Which way the surface faces (for lighting)

@@ -4,5 +4,5 @@
 
 #include "FrameBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
 } // BiBuild

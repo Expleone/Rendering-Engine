@@ -4,5 +4,5 @@
 
 #include "Curve.h"
 
-namespace BiBuild {
+namespace holubiho {
 } // BiBuild

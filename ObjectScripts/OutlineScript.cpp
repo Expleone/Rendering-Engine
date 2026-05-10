@@ -6,7 +6,7 @@
 
 #include "../core/InputHandler.h"
 
-namespace BiBuild {
+namespace holubiho {
     void OutlineScript::Update() {
         if (InputManager::GetMouseMode() == GLFW_CURSOR_DISABLED) {model->mesh = nullptr; return;}
         auto objToOutline = InputManager::ObjectUnderMouse();

@@ -4,7 +4,7 @@
 
 #include "IndexBuffer.h"
 
-namespace BiBuild {
+namespace holubiho {
     IndexBuffer::IndexBuffer(const GLuint* data, GLuint count) : count(count) {
         glGenBuffers(1, &ID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);

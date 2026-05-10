@@ -10,7 +10,7 @@
 #include <uuid.h>
 
 
-namespace BiBuild::Helper {
+namespace holubiho::Helper {
 
 
     inline std::string read_file(const char* filename) {

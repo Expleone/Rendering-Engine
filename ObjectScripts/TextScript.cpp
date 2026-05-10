@@ -4,5 +4,5 @@
 
 #include "TextScript.h"
 
-namespace BiBuild {
+namespace holubiho {
 } // BiBuild

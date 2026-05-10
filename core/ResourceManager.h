@@ -19,7 +19,7 @@
 #include "Texture.h"
 
 
-namespace BiBuild {
+namespace holubiho {
     struct Vertex;
 
     class ResourceManager {

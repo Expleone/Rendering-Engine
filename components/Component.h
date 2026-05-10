@@ -6,7 +6,7 @@
 #define VIEWER_COMPONENT_H
 
 
-namespace BiBuild {
+namespace holubiho {
     class SceneObject;
 
     class Component {

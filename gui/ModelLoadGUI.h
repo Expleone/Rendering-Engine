@@ -10,7 +10,7 @@
 #include "../core/ResourceManager.h"
 #include "../core/SceneObject.h"
 
-namespace BiBuild {
+namespace holubiho {
 
 class ModelLoadGUI {
 

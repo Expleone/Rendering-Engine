@@ -17,7 +17,7 @@
 #include "../components/TransformComponent.h"
 #include "../ObjectScripts/ObjectScript.h"
 
-namespace BiBuild {
+namespace holubiho {
     class SceneManager;
 
     class SceneObject {

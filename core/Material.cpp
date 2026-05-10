@@ -6,7 +6,7 @@
 
 #include "RenderSystem.h"
 
-namespace BiBuild {
+namespace holubiho {
     void Material::SendToShader(ShaderProgram* shaderProgram) const {
         if (shaderProgram) {
             shaderProgram->Use();

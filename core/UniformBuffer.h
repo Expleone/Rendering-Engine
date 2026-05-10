@@ -6,7 +6,7 @@
 #define VIEWER_UNIFORMBUFFER_H
 #include <iostream>
 #include <glad/glad.h>
-namespace BiBuild {
+namespace holubiho {
 
     class UniformBuffer {
     public:

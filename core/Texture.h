@@ -12,7 +12,7 @@
 #include "glad/glad.h"
 #include "stb_image.h"
 
-namespace BiBuild {
+namespace holubiho {
 
     enum class TexType {
         Tex2D,

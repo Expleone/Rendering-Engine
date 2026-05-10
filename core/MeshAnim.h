@@ -6,7 +6,7 @@
 #define VIEWER_MESHANIM_H
 #include "Mesh.h"
 
-namespace BiBuild {
+namespace holubiho {
     class MeshAnim : public Mesh {
         int currentFrame = 0; // How many frames into the animation we are
         int verticesPerFrame = 0; // How many vertices are in each frame of the animation
