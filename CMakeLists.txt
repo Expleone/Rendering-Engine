@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-project(Viewer)
-
+project(Viewer C CXX)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}")
 include(FetchContent)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -76,7 +77,10 @@ add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
         ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
 )
+
 target_include_directories(imgui_lib PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+target_include_directories(imgui_lib PRIVATE ${glfw_SOURCE_DIR}/include)
+target_link_libraries(imgui_lib PRIVATE glfw)
 
 FetchContent_Declare(
         stb
@@ -86,23 +90,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(stb)
 
 if(WIN32)
-    # Fetch precompiled VLC Windows SDK directly from VideoLAN
     FetchContent_Declare(
             vlc_sdk
-            URL https://download.videolan.org/pub/videolan/vlc/3.0.20/win64/vlc-3.0.20-win64.zip
+            URL https://www.nuget.org/api/v2/package/VideoLAN.LibVLC.Windows/3.0.20
     )
     FetchContent_MakeAvailable(vlc_sdk)
 
-    set(VLC_INCLUDE_DIRS ${vlc_sdk_SOURCE_DIR}/sdk/include)
-    set(VLC_LIBRARY_DIRS ${vlc_sdk_SOURCE_DIR}/sdk/lib)
+    # Use the specific paths confirmed by your tree.txt
+    set(VLC_ROOT "${vlc_sdk_SOURCE_DIR}/build/x64")
+    set(VLC_INCLUDE_DIRS "${VLC_ROOT}/include")
+    set(VLC_LIBRARY_DIRS "${VLC_ROOT}")
     set(VLC_LIBRARIES libvlc libvlccore)
 
-    # Automatically copy the required DLLs to the build directory so the executable can run
-    file(GLOB VLC_DLLS "${vlc_sdk_SOURCE_DIR}/*.dll")
-    file(COPY ${VLC_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
-
-    # Also copy the plugins folder which VLC requires at runtime
-    file(COPY "${vlc_sdk_SOURCE_DIR}/plugins" DESTINATION ${CMAKE_BINARY_DIR})
+    # Copy the DLLs (libvlc.dll, libvlccore.dll) to the build directory
+    file(GLOB VLC_DLLS "${VLC_ROOT}/*.dll")
+    file(COPY ${VLC_DLLS} DESTINATION ${CMAKE_SOURCE_DIR})
+file(COPY "${VLC_ROOT}/plugins" DESTINATION ${CMAKE_SOURCE_DIR})
 else()
     # UNIX platforms: Precompiled binaries are highly volatile due to glibc/framework variations.
     # Package managers or PkgConfig remain the required standard.

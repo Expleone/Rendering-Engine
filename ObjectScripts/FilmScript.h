@@ -4,6 +4,11 @@
 
 #ifndef VIEWER_FILMSCRIPT_H
 #define VIEWER_FILMSCRIPT_H
+
+#ifdef _MSC_VER
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 #include <vlc/vlc.h>
 #include <cstdlib>
 #include <mutex>

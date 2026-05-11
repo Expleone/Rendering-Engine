@@ -4,6 +4,10 @@
 
 #ifndef VIEWER_TVSCRIPT_H
 #define VIEWER_TVSCRIPT_H
+#ifdef _MSC_VER
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 #include "FilmScript.h"
 #include "ObjectScript.h"
 
