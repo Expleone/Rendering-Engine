@@ -10,7 +10,6 @@
 #include "../components/LightComponent.h"
 #include "../components/ModelComponent.h"
 #include "../ObjectScripts/SkyboxScript.h"
-#include "../test_models/cube.h"
 
 namespace holubiho {
 
@@ -55,7 +54,7 @@ namespace holubiho {
         auto uuid = Helper::genUUID();
         auto obj = std::make_unique<SceneObject>(uuid, "Skybox", (SceneManager*)this);
         auto model = obj->AddComponent<ModelComponent>();
-        model->mesh = ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+        model->mesh = ResourceManager::GetMesh("resources/cube.glb");
         model->mat = ResourceManager::CreateMaterial("SkyboxMaterial");
 
         auto skyboxTex = ResourceManager::LoadTextureCubeMap(faces);

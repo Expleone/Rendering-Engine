@@ -20,8 +20,6 @@
 #include "components/LightComponent.h"
 #include "core/RenderSystem.h"
 #include "core/ResourceManager.h"
-#include "test_models/birds.h"
-#include "./test_models/cube.h"
 #include "core/TextGenerator.h"
 #include "core/Time.h"
 #include "gui/ModelLoadGUI.h"
@@ -103,15 +101,11 @@ void DrawDebug(holubiho::SceneManager* scene) {
 
     for (int i = 0; i < scene->objects.size(); ++i) {
         if (scene->objects[i]) {
-            // Push an ID so ImGui doesn't get confused if two objects have the same name
             ImGui::PushID(i);
             if (scene->objects[i]->GetComponent<holubiho::ModelComponent>()) {
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255)); // Highlight selected object in yellow
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
             }
-            // Selectable returns true if it was clicked this frame
             if (ImGui::Selectable(scene->objects[i]->name.c_str(), false)) {
-                // Handle selection logic here later
-                // e.g., selectedObjectIndex = i;
                 currentObject = scene->objects[i].get();
                 pos[0] = currentObject->transform->localPosition.x;
                 pos[1] = currentObject->transform->localPosition.y;
@@ -249,11 +243,6 @@ int main() {
 
     auto tv = SetupTv(&scene);
     cameraScript->SetTVObject(tv);
-    // tv->GetScript<BiBuild::TVScript>()->SetLight(SpotlightObj);
-    // tv->AddChild(SpotlightObj);
-    // SpotlightObj->transform->localPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-    // SpotlightLight->direction = -tv->transform->Forward();
-    // SpotlightLight->cutoff = 90.0f;
 
 
     auto sceneObjs = scene.CreateObject("sceneObjs");
@@ -311,11 +300,7 @@ int main() {
         CheckInteraction();
         scene.UpdateScene();
 
-        if (++framen/60 >= birds_data.nAnimFrames) {
-            framen = 0;
-        }
 
-        holubiho::ResourceManager::LoadMesh("bird_mesh", birds_data.vertices + framen/60*birds_data.nVertices*3, birds_data.nVertices*3, birds_data.faces, birds_data.nFaces * 3, glm::vec3(1.0f, 0.5f, 0.2f));
         // changeMainShader();
         holubiho::RenderSystem::UpdateAndDraw(
             scene,

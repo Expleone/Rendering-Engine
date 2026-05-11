@@ -127,7 +127,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(freetype)
 
 # --- Основний проект ---
-add_executable(viewer main.cpp test_models/birds.c
+add_executable(viewer main.cpp
         core/InputHandler.cpp
         core/InputHandler.h
         BiBuild.h
@@ -162,8 +162,6 @@ add_executable(viewer main.cpp test_models/birds.c
         core/UniformBuffer.h
         core/MeshAnim.cpp
         core/MeshAnim.h
-        test_models/cube.cpp
-        test_models/cube.h
         core/Texture.cpp
         core/Texture.h
         core/Material.cpp

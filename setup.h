@@ -14,7 +14,6 @@
 #include "core/ResourceManager.h"
 #include "ObjectScripts/BiplaneScript.h"
 #include "ObjectScripts/TVScript.h"
-#include "test_models/cube.h"
 #include "ObjectScripts/CameraScript.h"
 
 
@@ -22,16 +21,16 @@
 static float waveHeight = 0.14f;
 static float waveSpeed = 1.0f;
 
-
 static float windStrength = 0.05f;
 static float windSpeed = 1.0f;
 static glm::vec3 windDir = glm::vec3(1,0,1);
 
-// TV screen UV bounds (must be persistent so we can pass their addresses to materials)
 static float tv_minX = 0.008f;
 static float tv_minY = 0.786f;
 static float tv_maxX = 0.264f;
 static float tv_maxY = 0.997f;
+
+static char* font = "resources/fonts/arial.ttf";
 
 std::vector<std::string> skyboxFaces
 {
@@ -196,7 +195,7 @@ holubiho::SceneObject* SetupTv(holubiho::SceneManager* scene ) {
 
     auto nextButton = scene->CreateObject("NextButton");
     auto nextModel = nextButton->AddComponent<holubiho::ModelComponent>();
-    nextModel->mesh = holubiho::ResourceManager::GetMesh("cube_mesh");
+    nextModel->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");
     nextModel->mat = holubiho::ResourceManager::CreateMaterial("NextButtonMat");
     nextModel->mat->ambient = glm::vec4(0.0f);
     nextModel->mat->diffuse = glm::vec4(0.0f, 0 , 0 ,1.0f);
@@ -212,7 +211,7 @@ holubiho::SceneObject* SetupTv(holubiho::SceneManager* scene ) {
 
     auto playButton = scene->CreateObject("PlayButton");
     auto playModel = playButton->AddComponent<holubiho::ModelComponent>();
-    playModel->mesh = holubiho::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+    playModel->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");
     playModel->mat = holubiho::ResourceManager::CreateMaterial("PlayButtonMat");
     playModel->mat->ambient = glm::vec4(0.0f);
     playModel->mat->diffuse = glm::vec4(0.0f, 0 , 0 ,1.0f);
@@ -229,7 +228,7 @@ holubiho::SceneObject* SetupTv(holubiho::SceneManager* scene ) {
 
     auto prevButton = scene->CreateObject("PrevButton");
     auto prevModel = prevButton->AddComponent<holubiho::ModelComponent>();
-    prevModel->mesh = holubiho::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));;
+    prevModel->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");;
     prevModel->mat = holubiho::ResourceManager::CreateMaterial("PrevButtonMat");
     prevModel->mat->ambient = glm::vec4(0.0f);
     prevModel->mat->diffuse = glm::vec4(0.0f, 0 , 0 ,1.0f);
@@ -301,7 +300,7 @@ holubiho::SceneObject* SetupPlane(holubiho::SceneManager* scene, bool* debugPtr)
         auto cpObj = scene->CreateObject("PlaneControlPoint" + std::to_string(cpIndex++));
         auto cpModel = cpObj->AddComponent<holubiho::ModelComponent>();
         cpModel->drawUUID = true;
-        cpModel->mesh = holubiho::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+        cpModel->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");
         auto cpMat = holubiho::ResourceManager::CreateMaterial("controlPointMat");
         cpMat->ambient   = glm::vec4(0.0f); // No self-illumination
         cpMat->diffuse   = glm::vec4(glm::vec3(1, 0, 0), 1); // Red color for control points
@@ -354,7 +353,7 @@ holubiho::SceneObject* SetupCamera(holubiho::SceneManager* scene, bool* debugPtr
         auto cpModel = cpObj->AddComponent<holubiho::ModelComponent>();
         cpModel->drawUUID = true;
         cpObj->render = false;
-        cpModel->mesh = holubiho::ResourceManager::LoadMesh("cube_mesh", cube_data.vertices, cube_data.nVertices*3, cube_data.faces, cube_data.nFaces * 3, glm::vec3(0.2f, 0.7f, 0.3f));
+        cpModel->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");
         auto cpMat = holubiho::ResourceManager::CreateMaterial("CameraControlPointMat");
         cpMat->ambient   = glm::vec4(0.0f); // No self-illumination
         cpMat->diffuse   = glm::vec4(glm::vec3(0, 0, 1), 1); // Red color for control points
