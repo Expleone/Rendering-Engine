@@ -7,17 +7,15 @@ include(FetchContent)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# --- GLAD (OpenGL Loader) ---
 FetchContent_Declare(
         glad
         GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-        GIT_TAG        v0.1.36 # Стабільна версія для OpenGL 3.3+
+        GIT_TAG        v0.1.36
 )
-# Налаштовуємо GLAD перед завантаженням
+
 set(GLAD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glad)
 
-# --- GLFW (Window Management) ---
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -27,7 +25,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
-# --- GLM (Mathematics) ---
 FetchContent_Declare(
         glm
         GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -35,7 +32,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-# --- ImGui (UI) ---
 FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -49,16 +45,15 @@ FetchContent_Declare(
         GIT_TAG        v1.2.3
 )
 
-# Make the library available to the build
+
 FetchContent_MakeAvailable(stduuid)
 
 FetchContent_Declare(
         assimp
         GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v6.0.5 # Вкажіть потрібну версію або хеш
+        GIT_TAG v6.0.5
 )
 
-# Вимкнення зайвих функцій для прискорення збірки
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
@@ -66,7 +61,6 @@ set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(assimp)
 
-# Створення бібліотеки ImGui
 add_library(imgui_lib STATIC
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_draw.cpp
@@ -96,19 +90,15 @@ if(WIN32)
     )
     FetchContent_MakeAvailable(vlc_sdk)
 
-    # Use the specific paths confirmed by your tree.txt
     set(VLC_ROOT "${vlc_sdk_SOURCE_DIR}/build/x64")
     set(VLC_INCLUDE_DIRS "${VLC_ROOT}/include")
     set(VLC_LIBRARY_DIRS "${VLC_ROOT}")
     set(VLC_LIBRARIES libvlc libvlccore)
 
-    # Copy the DLLs (libvlc.dll, libvlccore.dll) to the build directory
     file(GLOB VLC_DLLS "${VLC_ROOT}/*.dll")
     file(COPY ${VLC_DLLS} DESTINATION ${CMAKE_SOURCE_DIR})
 file(COPY "${VLC_ROOT}/plugins" DESTINATION ${CMAKE_SOURCE_DIR})
 else()
-    # UNIX platforms: Precompiled binaries are highly volatile due to glibc/framework variations.
-    # Package managers or PkgConfig remain the required standard.
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(VLC REQUIRED libvlc)
 endif()
@@ -122,11 +112,10 @@ set(FT_DISABLE_BROTLI ON CACHE BOOL "Disable Brotli")
 FetchContent_Declare(
         freetype
         GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-        GIT_TAG        VER-2-13-2 # Specify the desired release tag
+        GIT_TAG        VER-2-13-2
 )
 FetchContent_MakeAvailable(freetype)
 
-# --- Основний проект ---
 add_executable(viewer main.cpp
         core/InputHandler.cpp
         core/InputHandler.h
@@ -195,18 +184,13 @@ add_executable(viewer main.cpp
         setup.cpp
 )
 
-#add_executable(birds c.cpp test_models/birds.c
-#        c.cpp)
-
-# Знаходимо системний OpenGL
 find_package(OpenGL REQUIRED)
 
-# Лінкуємо ВСЕ разом
 target_link_libraries(viewer PRIVATE
         imgui_lib
         glfw
-        glad          # Додано GLAD
-        glm::glm      # Додано GLM
+        glad
+        glm::glm
         OpenGL::GL
         stduuid
         assimp
@@ -220,13 +204,3 @@ target_include_directories(viewer PRIVATE ${stb_SOURCE_DIR}
         ${VLC_INCLUDE_DIRS})
 
 target_link_directories(viewer PRIVATE ${VLC_LIBRARY_DIRS})
-
-#target_link_libraries(birds PRIVATE
-#        imgui_lib
-#        glfw
-#        glad          # Додано GLAD
-#        glm::glm      # Додано GLM
-#        OpenGL::GL
-#        stduuid
-#
-#)
