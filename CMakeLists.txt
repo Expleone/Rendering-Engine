@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-project(Viewer C CXX)
+project(Project C CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}")
 include(FetchContent)
@@ -116,7 +116,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(freetype)
 
-add_executable(viewer main.cpp
+add_executable(project_pgr main.cpp
         core/InputHandler.cpp
         core/InputHandler.h
         BiBuild.h
@@ -186,7 +186,7 @@ add_executable(viewer main.cpp
 
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(viewer PRIVATE
+target_link_libraries(project_pgr PRIVATE
         imgui_lib
         glfw
         glad
@@ -200,7 +200,7 @@ target_link_libraries(viewer PRIVATE
 
 
 
-target_include_directories(viewer PRIVATE ${stb_SOURCE_DIR}
+target_include_directories(project_pgr PRIVATE ${stb_SOURCE_DIR}
         ${VLC_INCLUDE_DIRS})
 
-target_link_directories(viewer PRIVATE ${VLC_LIBRARY_DIRS})
+target_link_directories(project_pgr PRIVATE ${VLC_LIBRARY_DIRS})
