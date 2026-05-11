@@ -12,4 +12,4 @@ MoveToNextPoint KEYBOARD 77 KEYBOARD 78
 StopMovingAlongCurve KEYBOARD 80
 ToggleDebug KEYBOARD 76
 ToggleUUID KEYBOARD 85
-ReloadKeybindings KEYBOARD 82
+ReloadSettings KEYBOARD 82

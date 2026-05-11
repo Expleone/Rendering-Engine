@@ -178,7 +178,7 @@ int main() {
     while (!glfwWindowShouldClose(holubiho::RenderSystem::GetGLFWWindow())) {
         holubiho::Time::UpdateTime();
         static bool keybiningsReloaded = false;
-        if (holubiho::InputManager::IsActionActive("ReloadKeybindings")) {
+        if (holubiho::InputManager::IsActionActive("ReloadSettings")) {
              if (!keybiningsReloaded) {
                  SetupInputBindings();
                  LoadTVVideosTXT("tv_videos.txt", tv);
