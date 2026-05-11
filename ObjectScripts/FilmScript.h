@@ -23,26 +23,10 @@ typedef SSIZE_T ssize_t;
 
 namespace holubiho {
 
-
-
-
-
-
-
-    // Context passed to VLC callbacks
-
-
-    // --- VLC Video Callbacks ---
-
-    // 1. Lock: VLC is about to write a frame. We give it our pixel buffer.
     class VLCManager {
     public:
         static libvlc_instance_t* get() {
             static libvlc_instance_t* instance = []() -> libvlc_instance_t* {
-// #ifdef __linux__
-//                 setenv("VLC_PLUGIN_PATH", "/usr/lib/x86_64-linux-gnu/vlc/plugins", 1);
-// #endif
-                // Removed "--quiet" and added "--verbose=2" for debug output
                 const char* fallbackArgs[] = {"--verbose=2", "--file-logging", "--logfile=vlc_log.txt", "--no-video-title-show", "--video-filter=transform",
     "--transform-type=vflip"};
                 return libvlc_new(6, fallbackArgs);
@@ -82,9 +66,7 @@ namespace holubiho {
         {
             FilmScript_NothingSpecial=0,
             FilmScript_Opening,
-            FilmScript_Buffering, /* XXX: Deprecated value. Check the
-                               * libvlc_MediaPlayerBuffering event to know the
-                               * buffering state of a libvlc_media_player */
+            FilmScript_Buffering,
             Filmscript_Playing,
             FilmScript_Paused,
             FilmScript_Stopped,
@@ -113,7 +95,7 @@ namespace holubiho {
                 display_callback,
                 &context
             );
-            tex = ResourceManager::CreateTexture("videoTexture", TexType::Tex2D, context.width, context.height, true, GL_RGBA);
+            tex = ResourceManager::CreateTexture("videoTexture", context.width, context.height, true, GL_RGBA);
             videoPlaybackEnabled = true;
 
         }
@@ -153,7 +135,6 @@ namespace holubiho {
         }
 
         static void display_callback(void* opaque, void* picture) {
-            // Handled in render loop
         }
     };
 

@@ -32,7 +32,6 @@ void main() {
     textBlockUV.x = offsetPos.x / totalTextSize.x;
     textBlockUV.y = ((- offsetPos.y) / totalTextSize.y) / textAspectRatio;
 
-    // Apply the model matrix to the offset position
     vec4 pos = model * vec4(offsetPos, 1.0f);
 
     worldPos = pos.xyz;

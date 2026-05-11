@@ -19,7 +19,7 @@
 namespace holubiho {
 
     enum class ProjectionType{Perspective, Orthographic};
-
+    ///  @brief Component that defines a camera in the scene. Provides methods to get projection and view matrices, and handles camera control state for user input.
     class CameraComponent : public Component{
     public:
         struct CameraControlState {
@@ -37,12 +37,12 @@ namespace holubiho {
 
         CameraComponent(SceneObject* owner);
 
-        glm::mat4 FastCameraInverse();
-
+        /// @brief Returns the projection matrix based on the current projection type and camera parameters.
         glm::mat4 GetProjectionMat();
+
+        /// @brief Returns the view matrix calculated from the camera's world transform. Uses the inverse of the camera's world matrix to create the view matrix.
         glm::mat4 GetViewMat();
 
-        glm::mat4 BuildCameraViewMatrix() const;
 
     };
 

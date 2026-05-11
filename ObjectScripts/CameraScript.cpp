@@ -1,16 +1,10 @@
-//
-// Created by expleoene on 4/22/26.
-//
-
 #include "CameraScript.h"
-
 #include "imgui.h"
 #include "../core/Time.h"
 #include <glm/gtc/quaternion.hpp>
-
+#include <cmath>
 
 namespace holubiho {
-
 
     void CameraScript::Update() {
         if (!this->owner || !this->owner->transform || !camera) {
@@ -22,8 +16,9 @@ namespace holubiho {
             if (*debugPtr != prevDebugValue) {
                 for (auto cpObj : controlPointObjects) {
                     cpObj->render = (*debugPtr);
-                    if (cpObj->GetComponent<ModelComponent>())
-                        cpObj->GetComponent<ModelComponent>()->drawUUID = (*debugPtr);
+                    if (auto modelComp = cpObj->GetComponent<ModelComponent>()) {
+                        modelComp->drawUUID = (*debugPtr);
+                    }
                 }
                 prevDebugValue = *debugPtr;
             }
@@ -67,7 +62,6 @@ namespace holubiho {
             InputManager::SetInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
 
-        // Extract vectors directly from the transform's quaternion
         const glm::vec3 forward = owner->transform->localRotation * glm::vec3(0.0f, 0.0f, -1.0f);
         const glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
         const glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -86,21 +80,18 @@ namespace holubiho {
             isMovementDisabled = false;
             isMovingAlongCurve = false;
             currentPoint = -1;
-             if (moveAlong != nullptr) {
-                 moveAlong.reset();
-             }
+            moveAlong.reset();
         }
 
         if (InputManager::IsActionActive("MoveToNextPoint")) {
             if (!isPointChanged) {
-                if (moveAlong != nullptr) {
-                    moveAlong.reset();
-                }
+                moveAlong.reset();
 
                 isPointChanged = true;
-                currentPoint+=1;
-                if (currentPoint >= points.size()) currentPoint = -1;
-                moveTime = 5;
+                currentPoint += 1;
+                if (currentPoint >= static_cast<int>(points.size())) currentPoint = -1;
+                moveTime = 5.0;
+
                 if (currentPoint < 0) {
                     isMovingAlongCurve = false;
                     isMovementDisabled = false;
@@ -108,75 +99,76 @@ namespace holubiho {
                 }
 
                 if (currentPoint == 0 && tv != nullptr) {
-                    // Special case for the TV point to make it look at the screen
-                    auto tvposition = glm::vec3(tv->transform->worldMatrix[3].x, tv->transform->worldMatrix[3].y,tv->transform->worldMatrix[3].z);
-
-
-                    points[currentPoint].first = (tvposition - tv->transform->Forward()*3.0f + glm::vec3(0.0f, 0.3f, 0.0f));
-                    points[currentPoint].second = tv->transform->Forward() + (glm::vec3(10.0f, 0.0f, 0.0f));
+                    auto tvposition = glm::vec3(tv->transform->worldMatrix[3].x, tv->transform->worldMatrix[3].y, tv->transform->worldMatrix[3].z);
+                    points[currentPoint].first = (tvposition - tv->transform->Forward() * 3.0f + glm::vec3(0.0f, 0.3f, 0.0f));
+                    points[currentPoint].second = tv->transform->Forward() + glm::vec3(10.0f, 0.0f, 0.0f);
                 }
+
                 if (currentPoint == 2 && flightPath) {
                     points[currentPoint].first = flightPath->getPoint(0.0f);
-                    points[currentPoint].second = glm::vec3(-6,0,-17) - flightPath->getPoint(0);
+                    points[currentPoint].second = glm::vec3(-6, 0, -17) - flightPath->getPoint(0);
                     onFlightPass = false;
-                    moveTime = 3;
+                    moveTime = 3.0;
                 }
 
                 createCurveToLocalPoint(points[currentPoint].first, points[currentPoint].second);
-                curveParam = 0;
+                curveParam = 0.0f;
                 isMovingAlongCurve = true;
                 isMovementDisabled = true;
-
             }
         } else {
             isPointChanged = false;
         }
 
         UpdatePlanePosition();
+
         if (currentPoint == 1 && plane) {
-            // Disable the static curve movement since the target is dynamic
             isMovingAlongCurve = false;
             isMovementDisabled = true;
 
-            // 1. Smoothly interpolate position (Adjust followSpeed for snappiness)
             float followSpeed = 3.0f;
+            float dt = static_cast<float>(Time::DeltaTime());
+            float lerpFactor = 1.0f - glm::exp(-followSpeed * dt);
+
             owner->transform->localPosition = glm::mix(
                 owner->transform->localPosition,
                 points[currentPoint].first,
-                static_cast<float>(Time::DeltaTime() * followSpeed)
+                lerpFactor
             );
 
             glm::vec3 targetDir = glm::normalize(points[currentPoint].second);
-            glm::vec3 up(0.0f, 1.0f, 0.0f);
+            glm::vec3 targetUp(0.0f, 1.0f, 0.0f);
 
-            if (glm::abs(glm::dot(targetDir, up)) > 0.999f) {
-                glm::vec3 right = owner->transform->localRotation * glm::vec3(1.0f, 0.0f, 0.0f);
-                up = glm::normalize(glm::cross(right, targetDir));
+            if (glm::abs(glm::dot(targetDir, targetUp)) > 0.999f) {
+                glm::vec3 rightVec = owner->transform->localRotation * glm::vec3(1.0f, 0.0f, 0.0f);
+                targetUp = glm::normalize(glm::cross(rightVec, targetDir));
             }
 
-            glm::quat targetRot = glm::quatLookAt(targetDir, up);
+            glm::quat targetRot = glm::quatLookAt(targetDir, targetUp);
 
             owner->transform->localRotation = glm::slerp(
                 owner->transform->localRotation,
                 targetRot,
-                static_cast<float>(Time::DeltaTime() * followSpeed)
+                lerpFactor
             );
-        }else if (currentPoint == 2 && flightPath && (curveParam == 1 || onFlightPass)) {
+
+        } else if (currentPoint == 2 && flightPath && (curveParam >= 1.0f || onFlightPass)) {
             if (curveParam >= 1.0f) {
                 onFlightPass = true;
                 curveParam = 0.0f;
-                moveTime = 20.0f;
+                moveTime = 20.0;
             }
+
             curveParam += static_cast<float>(Time::DeltaTime() / moveTime);
             if (curveParam > 1.0f) {
-                curveParam = curveParam - static_cast<int>(curveParam);
+                curveParam = std::fmod(curveParam, 1.0f);
             }
+
             const auto pos = owner->transform->localPosition;
             const auto nextPos = flightPath ? flightPath->getPoint(curveParam) : pos;
             owner->transform->localPosition = nextPos;
-            LookInDirection(glm::vec3(-6,0,-17)  - nextPos);
+            LookInDirection(glm::vec3(-6, 0, -17) - nextPos);
         }
-
 
         if (isMovingAlongCurve) {
             if (!moveAlong || moveTime <= 0.0) {
@@ -188,7 +180,7 @@ namespace holubiho {
 
                 const auto pos = owner->transform->localPosition;
                 const auto nextPos = moveAlong->getPoint(curveParam);
-                LookInDirection(nextPos-pos);
+                LookInDirection(nextPos - pos);
                 owner->transform->localPosition = nextPos;
 
                 if (curveParam >= 1.0f) {
@@ -205,7 +197,6 @@ namespace holubiho {
         const float speed = InputManager::IsActionActive("Sprint") ? movementSpeed * 5.0f : movementSpeed;
         glm::vec3 newPos = this->owner->transform->localPosition + moveDir * speed * static_cast<float>(Time::DeltaTime());
 
-
         this->owner->transform->localPosition = checkIfInBounds(newPos) ? newPos : this->owner->transform->localPosition;
     }
 
@@ -215,19 +206,16 @@ namespace holubiho {
 
         float distance = glm::length(B - A);
 
-        auto C1 = A + (owner->transform->Forward()*(distance*0.25f));
+        auto C1 = A + (owner->transform->Forward() * (distance * 0.25f));
         auto C2 = B - (glm::normalize(dir) * (distance * 0.25f));
-        std::vector<glm::vec3>controlPoints{A,C1,C2,B};
+        std::vector<glm::vec3> controlPoints{A, C1, C2, B};
         moveAlong = std::make_unique<Curve>(controlPoints);
     }
 
     void CameraScript::MoveAlongCurve(std::unique_ptr<Curve> curve, double time) {
-        if (moveAlong != nullptr) {
-            moveAlong.reset();
-        }
         moveAlong = std::move(curve);
         isMovementDisabled = true;
-        curveParam = 0;
+        curveParam = 0.0f;
         moveTime = time;
         isMovingAlongCurve = true;
     }
@@ -235,8 +223,7 @@ namespace holubiho {
     void CameraScript::LookInDirection(glm::vec3 targetDirection) {
         if (glm::length(targetDirection) < 0.0001f) return;
         glm::vec3 dir = glm::normalize(targetDirection);
-
-        glm::vec3 up = glm::vec3(0,1,0);
+        glm::vec3 up = glm::vec3(0, 1, 0);
 
         if (glm::abs(glm::dot(dir, up)) > 0.999f) {
             glm::vec3 right = owner->transform->localRotation * glm::vec3(1.0f, 0.0f, 0.0f);
@@ -247,8 +234,8 @@ namespace holubiho {
     }
 
     void CameraScript::UpdatePlanePosition() {
-        if (!plane) return;
-        points[1].first = plane->transform->localPosition - plane->transform->Forward() * 5.0f + glm::vec3(0.0f, 1.0f, 0.0f)* 2.0f;
+        if (!plane || points.size() < 2) return;
+        points[1].first = plane->transform->localPosition - plane->transform->Forward() * 5.0f + glm::vec3(0.0f, 1.0f, 0.0f) * 2.0f;
         points[1].second = plane->transform->Forward();
     }
 
@@ -258,19 +245,18 @@ namespace holubiho {
         for (auto cpObj : controlPointObjects) {
             controlPoints.push_back(cpObj->transform->localPosition);
         }
-        if (flightPath) {
-            flightPath.reset();
-        }
         this->flightPath = std::make_unique<Curve>(Curve::createClosedLoop(controlPoints));
     }
+
     bool CameraScript::checkIfInBounds(glm::vec3 pos) {
         if (pos.x < -30.0f || pos.x > 30.0f || pos.y < 0.0f || pos.y > 50.0f || pos.z < -30.0f || pos.z > 30.0f) {
             return false;
         }
-        if (tv && tv->transform)
-            if (glm::distance(glm::vec3(pos), glm::vec3(tv->transform->worldMatrix[3])) < 1.0f) {
+        if (tv && tv->transform) {
+            if (glm::distance(pos, glm::vec3(tv->transform->worldMatrix[3])) < 1.0f) {
                 return false;
             }
+        }
         return true;
     }
 }

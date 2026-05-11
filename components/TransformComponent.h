@@ -11,6 +11,8 @@
 
 #include "Component.h"
 namespace holubiho {
+
+    /// @brief Component that defines the position, rotation, and scale of a SceneObject in the scene. Contains properties for local position, rotation (as a quaternion), scale, and the resulting world transformation matrix. Also manages parent-child relationships between SceneObjects for hierarchical transformations.
     class TransformComponent : public Component {
     public:
         enum class TransformSpace {
@@ -38,6 +40,7 @@ namespace holubiho {
             return m;
         }
 
+        /// @brief Rotates the transform by a given quaternion. The rotation can be applied in either local space (relative to the current orientation) or parent space (relative to the parent's orientation). The resulting rotation is normalized to prevent drift over time.
         void Rotate(const glm::quat& additionalRotation, TransformSpace space = TransformSpace::Parent) {
             if (space == TransformSpace::Parent) {
                 localRotation = additionalRotation * localRotation;
@@ -47,9 +50,11 @@ namespace holubiho {
             localRotation = glm::normalize(localRotation);
         }
 
+        /// @brief Returns the forward direction vector in local space of the transform based on its local rotation.
         glm::vec3 Forward() {
             return localRotation*glm::vec3(0,0,-1);
         }
+        /// @brief Returns the right direction vector in local space of the transform based on its local rotation.
         glm::vec3 Up() {
             return localRotation*glm::vec3(0,1,0);
         }

@@ -14,7 +14,6 @@
 namespace holubiho {
 
     SceneManager::SceneManager() {
-        // Initialize the hidden root object
         rootObject = CreateObject("SceneRoot");
         cameraObject = CreateObject("MainCamera");
         cameraObject->AddComponent<CameraComponent>();
@@ -74,7 +73,6 @@ namespace holubiho {
 
         auto sunlight = obj->AddComponent<LightComponent>();
         sunlight->type = LightType::Directional;
-        sunlight->intensity = 1.0f;
         sunlight->ambient = glm::vec3(0.2, 0.2, 0.2);
         sunlight->diffuse = glm::vec3(0.9f, 0.9f, 0.8f);
         sunlight->specular = glm::vec3(1.0f, 1.0f, 1.0f);

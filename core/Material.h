@@ -24,11 +24,15 @@ class Material {
         float shininess = 64.0f;
         std::vector<AdditionalShaderInfo> shaderInfo;
 
-        // 1. Diffuse texture, 2. Normal map, 3. Environment map, 4-16 are reserved for future use
+        // 1. Diffuse texture, 2. Normal map
         std::vector<Texture*> textures;
 
+        /// @brief Sends the material properties and textures to the shader program.
+        /// @param shaderProgram The shader program to which the material properties will be sent.
         void SendToShader(ShaderProgram *shaderProgram) const;
 
+        /// @brief Sends additional shader information that is not defined by typical material.
+        /// @param shaderProgram The shader program to which the additional information will be sent.
         void SendAdditionalInfo(ShaderProgram *shaderProgram) const {
             for (auto& info : shaderInfo) {
                 if (!info.infoPtr) {
@@ -52,6 +56,10 @@ class Material {
             }
         }
 
+        /// @brief Adds additional shader information to be sent to the shader program.
+        /// @param name The name of the uniform variable in the shader program that will receive the additional information. This should match the name defined in the shader code.
+        /// @param ptr A pointer to the data that will be sent to the shader program.
+        /// @param type The type of the uniform variable (e.g., Integer, Vec3, Vec2, Float) that indicates how the data should be interpreted and sent to the shader program.
         void AddInfo(const std::string& name, const void* ptr, const UniformType type) {
             shaderInfo.push_back({name, ptr, type});
         }

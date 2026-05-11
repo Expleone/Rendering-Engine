@@ -164,14 +164,12 @@ void main() {
     vec4 finalColor;
 
     if(material.texNum >= 3 && isInTVScreen()){
-        // Calculates mapped UVs and flips the V axis vertically for libVLC playback
         vec2 tCoords = vec2(
         (TexCoords.x - minX) / (maxX - minX),
         ((TexCoords.y - minY) / (maxY - minY))
         );
         finalColor = vec4(mix(texture(material.textures[2], tCoords).rgb, fog, fogCoeficient), alpha);
     } else {
-        // Base material rendering
         finalColor = vec4(mix(material.emission + CalculateLighting(normal), fog, fogCoeficient), alpha);
     }
 

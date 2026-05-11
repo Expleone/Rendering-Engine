@@ -19,128 +19,25 @@ namespace holubiho {
         std::vector<float> knots;
 
 
-        Curve(std::vector<glm::vec3>& control_points) : controlPoints(std::move(control_points)) {
-            int knotsNum = controlPoints.size() + CURVE_DEGREE + 1;
-            weights.assign(controlPoints.size(), 1.0);
-            knots.assign(knotsNum, 0.0);
-            for (int i = 0; i < CURVE_DEGREE + 1; i++) {
-                knots[knotsNum - i - 1] = 1;
-            }
-            int internalKnotCount = knotsNum - 2 * (CURVE_DEGREE + 1);
-            if (internalKnotCount > 0) {
-                float step = 1.0f / (internalKnotCount + 1);
-                for (int i = 1; i <= internalKnotCount; i++) {
-                    knots[CURVE_DEGREE + i] = i * step;
-                }
-            }
-        }
+        /// @brief Constructs a NURBS curve with the given control points. Initializes the knot vector and weights for a cubic B-spline.
+        /// The Created curve will be a clamped cubic B-spline, meaning the first and last control points will have full influence at the start and end of the curve, respectively. The knot vector is initialized with 0s for the first 4 knots, 1s for the last 4 knots, and evenly spaced values in between for any internal knots if there are more than 7 control points.
+        Curve(std::vector<glm::vec3>& control_points);
 
-        size_t findStartKnot(float t) {
-            for (int i = 3;  i < knots.size() - 1; i++) {
-                if (t >= knots[i] && t < knots[i+1]) return i;
-            }
-            return knots.size() - CURVE_DEGREE - 2;
-        }
+        /// @brief Finds the index of the knot span that contains the parameter t.
+        size_t findStartKnot(float t);
 
-        std::vector<double> weightFunc(size_t i, double t) {
-            double level1[4];
-            double level2[3];
-            double level3[2];
-            double level4;
+        /// @brief Computes the basis function values for the given knot span index i and parameter t. This function implements the Cox-de Boor recursion formula to calculate the basis functions for a cubic B-spline. It calculates the values for the first level (degree 1), then uses those to compute the second level (degree 2), and so on until it computes the final basis function values for degree 3. The resulting vector contains the basis function values corresponding to the control points that influence the curve at parameter t.
+        /// @param i The index of the knot span that contains t.
+        /// @param t The parameter value at which to evaluate the basis functions in the range [0, 1].
+        std::vector<double> weightFunc(size_t i, double t);
 
-            //Ni,1
-            level1[0] = 1;
+        /// @brief Returns point on the curve corresponding to parameter t.
+        /// @param t The parameter value in the range [0, 1] that specifies the position along the curve. 0 corresponds to the start of the curve, and 1 corresponds to the end.
+        glm::vec3 getPoint(float t);
 
-            //Ni-1, 2
-            double dividerRight = knots[i+1] - knots[i];
-            level1[1] = dividerRight == 0 ? 0 : (knots[i+1] - t)/dividerRight * level1[0];
-
-            //Ni-2,3
-            dividerRight = knots[i+1] - knots[i-1];
-            level1[2] = dividerRight == 0 ? 0 : (knots[i+1] - t)/dividerRight * level1[1];
-
-            //Ni-3,4
-            dividerRight = knots[i+1] - knots[i-2];
-            level1[3] = dividerRight == 0 ? 0 : (knots[i+1] - t)/dividerRight * level1[2];
-
-            //Ni,2
-            double dividerLeft = knots[i+1] - knots[i];
-            level2[0] = dividerLeft == 0 ? 0 : (t - knots[i])/dividerLeft * level1[0];
-
-            //Ni-1,3
-            dividerLeft = knots[i+1] - knots[i-1];
-            level2[1] = dividerLeft == 0 ? 0 : (t - knots[i-1])/dividerLeft * level1[1];
-            dividerRight = knots[i+2] - knots[i];
-            level2[1] = dividerRight == 0 ? level2[1] : level2[1] + (knots[i+2] - t)/dividerRight * level2[0];
-
-            //Ni-2,4
-            dividerLeft = knots[i+1] - knots[i-2];
-            level2[2] = dividerLeft == 0 ? 0 : (t - knots[i-2])/dividerLeft * level1[2];
-            dividerRight = knots[i+2] - knots[i-1];
-            level2[2] = dividerRight == 0 ? level2[2] : level2[2] + (knots[i+2] - t)/dividerRight * level2[1];
-
-            //Ni,3
-            dividerLeft = knots[i+2] - knots[i];
-            level3[0] = dividerLeft == 0 ? 0 : (t - knots[i])/dividerLeft * level2[0];
-
-            //Ni-1,4
-            dividerLeft = knots[i+2] - knots[i-1];
-            level3[1] = dividerLeft == 0 ? 0 : (t - knots[i-1])/dividerLeft * level2[1];
-            dividerRight = knots[i+3] - knots[i];
-            level3[1] = dividerRight == 0 ? level3[1] : level3[1] + (knots[i+3] - t)/dividerRight * level3[0];
-
-            //Ni,4
-            dividerLeft = knots[i+3] - knots[i];
-            level4 = dividerLeft == 0 ? 0 : (t - knots[i])/dividerLeft * level3[0];
-
-            return std::vector<double>{level1[3], level2[2], level3[1], level4};
-        }
-
-        glm::vec3 getPoint(float t) {
-            if (t < 0.0f) t = 0.0f;
-            if (t > 1.0f) t = 1.0f;
-            int first_knot = findStartKnot(t);
-            auto N = weightFunc(first_knot, t);
-
-            glm::vec3 C(0);
-            double denominator = 0.0;
-
-            for (int j = 0; j <= CURVE_DEGREE; ++j) {
-                int index = first_knot - CURVE_DEGREE + j;
-                double weight = N[j] * weights[index];
-                C.x += controlPoints[index].x * weight;
-                C.y += controlPoints[index].y * weight;
-                C.z += controlPoints[index].z * weight;
-                denominator += weight;
-            }
-
-            C.x /= denominator;
-            C.y /= denominator;
-            C.z /= denominator;
-
-            return C;
-        }
-        static Curve createClosedLoop(const std::vector<glm::vec3>& control_points) {
-            std::vector<glm::vec3> looped_points = control_points;
-
-            for (int i = 0; i <= CURVE_DEGREE; ++i) {
-                looped_points.push_back(control_points[i % control_points.size()]);
-            }
-
-            // Calculate sizes BEFORE looped_points is moved
-            int knotsNum = looped_points.size() + CURVE_DEGREE + 1;
-            int active_intervals = control_points.size();
-
-            // Call existing constructor (looped_points is moved here and becomes empty)
-            Curve curve(looped_points);
-
-            // Replace the clamped knot vector with a uniform periodic knot vector
-            for (int i = 0; i < knotsNum; ++i) {
-                curve.knots[i] = static_cast<float>(i - CURVE_DEGREE) / static_cast<float>(active_intervals);
-            }
-
-            return curve;
-        }
+        /// @brief Creates a closed loop curve by appending the first few control points to the end of the control point list. This ensures that the curve will loop back to the starting point smoothly.
+        /// @param control_points The control points that define the shape of the curve.
+        static Curve createClosedLoop(const std::vector<glm::vec3>& control_points);
     };
 
 } // BiBuild

@@ -75,7 +75,7 @@ namespace holubiho {
             // }
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
-            Get().atlas = ResourceManager::CreateTexture("Atlas", TexType::Tex2D, MAX_ATLAS_SIZE, MAX_ATLAS_SIZE, false, GL_RED);
+            Get().atlas = ResourceManager::CreateTexture("Atlas", MAX_ATLAS_SIZE, MAX_ATLAS_SIZE, false, GL_RED);
             int xoffset = 0;
             int yoffset = 0;
             Get().lineSpacing  = Get().face->size->metrics.height >> 6;

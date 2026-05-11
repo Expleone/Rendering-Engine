@@ -46,8 +46,15 @@ namespace holubiho {
         BoundingBox bb;
         std::string name;
 
+        /// @brief Constructs a Mesh with the given vertices, indices, and an optional name.
+        /// @param vertices A vector of Vertex structures containing the vertex data for the mesh.
+        /// @param indices A vector of unsigned integers representing the index data for the mesh.
+        /// @param name An optional name for the mesh, which can be used for identification and debugging purposes.
         Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices = {}, const std::string& name = "Mesh");
 
+        /// @brief Draws the mesh using the provided model matrix and shader program. If the mesh is marked as dirty, it updates the GPU buffers before drawing.
+        /// @param modelMat The model transformation matrix to apply to the mesh when drawing.
+        /// @param program The shader program to use for rendering the mesh.
         void Draw(glm::mat4& modelMat, ShaderProgram* program) const {
             vao.Bind();
             if (isDirty) {
@@ -61,20 +68,27 @@ namespace holubiho {
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ebo.GetCount()), GL_UNSIGNED_INT, nullptr);
         }
 
+        /// @brief Updates the vertex data of the mesh with new vertices and marks the mesh as dirty to indicate that GPU buffers need to be updated before the next draw call.
+        /// @param newVertices A vector of Vertex structures containing the new vertex data for the mesh
         void UpdateVertices(const std::vector<Vertex>& newVertices) {
             vertices = newVertices;
             isDirty = true; // Mark as dirty to update GPU buffers on next draw
         }
 
+        /// @brief Updates the index data of the mesh with new indices and marks the mesh as dirty to indicate that GPU buffers need to be updated before the next draw call.
+        /// @param newIndices A vector of unsigned integers representing the new index data for the mesh
         void UpdateIndices(const std::vector<unsigned int>& newIndices) {
             indices = newIndices;
             isDirty = true; // Mark as dirty to update GPU buffers on next draw
         }
 
+        /// @brief Sets the name of the mesh, which can be used for identification and debugging purposes.
+        /// @param newName The new name to assign to the mesh.
         void SetName(const std::string& newName) {
             name = newName;
         }
-
+    private:
+        /// @brief Updates the GPU buffers (vertex buffer and index buffer) with the current vertex and index data. This method is called when the mesh is marked as dirty, indicating that the vertex or index data has changed and needs to be re-uploaded to the GPU before the next draw call.
         void UpdateGPUBuffers() {
 
             // Update Vertex Buffer

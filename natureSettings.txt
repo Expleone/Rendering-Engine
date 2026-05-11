@@ -1,0 +1,8 @@
+waveHeight 0.14
+waveSpeed 1.0
+
+windStrength 0.05
+windSpeed 1.0
+windDir 1 0 1
+
+dayLengthSeconds 10.0

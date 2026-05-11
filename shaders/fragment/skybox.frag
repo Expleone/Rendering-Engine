@@ -36,15 +36,11 @@ void main() {
         skyColor = texture(nightCubeMapTex, TexCoords);
     }
 
-    // Calculate alignment between current pixel and sun direction
     float alignment = dot(viewDir, sunPos);
 
-    // Check if the pixel falls within the sun's angular radius
     if (alignment > 1.0 - sunSize) {
 
-        // 1. Create a local coordinate system (tangent space) around the sun
         vec3 worldUp = vec3(0.0, 1.0, 0.0);
-        // Prevent collinearity if sun is directly overhead
         if (abs(sunPos.y) > 0.999) {
             worldUp = vec3(1.0, 0.0, 0.0);
         }
@@ -52,20 +48,15 @@ void main() {
         vec3 right = normalize(cross(worldUp, sunPos));
         vec3 up = cross(sunPos, right);
 
-        // 2. Project the view vector onto the sun's plane to get local X/Y offsets
         float projX = dot(viewDir, right);
         float projY = dot(viewDir, up);
 
-        // 3. Normalize offsets to [0, 1] UV space based on sun size
-        // Note: The maximum projection distance is roughly equal to sunSize
         float u = (projX / sunSize) * 0.5 + 0.5;
         float v = (projY / sunSize) * 0.5 + 0.5;
         vec2 sunUV = vec2(u, v);
 
-        // 4. Sample and blend the sun texture
         vec4 sunTexColor = texture(material.textures[0], sunUV);
 
-        // Alpha blending (assuming pre-multiplied alpha or standard blending)
         FragColor = skyColor + sunTexColor;
     } else {
         FragColor = skyColor;

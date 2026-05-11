@@ -10,13 +10,13 @@
 #include "../components/ModelComponent.h"
 #include "../core/SceneObject.h"
 #include "GLFW/glfw3.h"
+#include "../setup.h"
 
 namespace holubiho {
 
 class SkyboxScript : public ObjectScript {
     double startTime;
     double prevTime{};
-    double coefficient = glm::pi<double>()/10;
     LightComponent* sunlight;
 
 

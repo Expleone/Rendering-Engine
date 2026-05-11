@@ -16,7 +16,7 @@ namespace holubiho {
         }
     }
 
-    glm::mat4 CameraComponent::FastCameraInverse() {
+    glm::mat4 CameraComponent::GetViewMat() {
         if (!this->owner || !this->owner->transform) {
             return glm::mat4(1.0f);
         }
@@ -35,22 +35,6 @@ namespace holubiho {
         return glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
     }
 
-    glm::mat4 CameraComponent::GetViewMat() {
-        return FastCameraInverse();
-    }
-
-    glm::mat4 CameraComponent::BuildCameraViewMatrix() const {
-        if (!this->owner || !this->owner->transform) {
-            return glm::mat4(1.0f);
-        }
-
-        const auto posv4 = owner->transform->worldMatrix[3];
-        const auto position = glm::vec3(posv4.x, posv4.y, posv4.z);
-        const glm::vec3 forward = owner->transform->Forward();
-        const glm::vec3 up = owner->transform->Up();
-
-        return glm::lookAt(position, position + forward, up);
-    }
 
 
 

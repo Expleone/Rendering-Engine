@@ -94,10 +94,7 @@ vec3 CalculateLighting(vec3 normal) {
                 vec3 halfwayDir = normalize(lightDir + cameraDir);
                 float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
                 specular = spec * lightSpec * material.specular;
-//                specular = pow(max(dot(reflect(lightDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
-
             }
-            //
 
             result += ambient + diffuse + specular;
             continue;
@@ -110,7 +107,6 @@ vec3 CalculateLighting(vec3 normal) {
                 vec3 halfwayDir = normalize(lDir + cameraDir);
                 float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
                 specular = spec * lightSpec * material.specular;
-//                specular = pow(max(dot(reflect(-lDir, normal), cameraDir),0), material.shininess)*lightSpec*material.specular;
             }
             //
             float spotLightEffect = 1.0;
@@ -138,8 +134,6 @@ void main() {
         normal = texture(material.textures[1], TexCoords).rgb;
 
         normal = normal * 2.0 - 1.0;
-
-        //        normal.y = -normal.y;
 
         normal = normalize(TBN * normal);
     }

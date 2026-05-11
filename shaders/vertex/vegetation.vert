@@ -29,13 +29,10 @@ layout (std140) uniform Matrices {
 
 
 vec3 calculateWindDisplacement(vec3 worldPos, float time, float speed, float strength, vec3 direction) {
-    // Spatial variance based on world position
     float spatialOffset = (worldPos.x + worldPos.z) * 0.5;
 
-    // Macro-sway (trunk/main branches)
     float sway = sin(time * speed + spatialOffset);
 
-    // Micro-flutter (leaves/grass tips)
     float flutter = sin(time * (speed * 3.14) + spatialOffset * 2.7) * 0.25;
 
     float totalMovement = (sway + flutter) * strength;

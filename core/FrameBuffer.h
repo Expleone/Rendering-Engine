@@ -9,6 +9,8 @@
 #include "glad/glad.h"
 
 namespace holubiho {
+
+    // @brief Class that encapsulates the creation and management of an OpenGL framebuffer object (FBO) with a color texture attachment and a depth renderbuffer. Provides methods for binding, unbinding, resizing, and retrieving the texture ID of the framebuffer.
     class FrameBuffer {
         GLuint fbo = 0;
         GLuint frameBuffTex = 0;
@@ -16,12 +18,12 @@ namespace holubiho {
         GLint internalFormat; // e.g., GL_RGBA32UI or GL_RGBA8
         GLenum dataFormat;    // e.g., GL_RGBA_INTEGER or GL_RGBA
         GLenum dataType;      // e.g., GL_UNSIGNED_INT or GL_UNSIGNED_BYTE
-        /// UUID: FrameBuffer uuidFbo(800, 600, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT);
-        /// std: FrameBuffer colorFbo(800, 600, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
 
 
         int width, height;
 
+
+        /// @brief Creates or recreates the color texture attachment for the framebuffer.
         void createFrameBuffTex() {
             if (frameBuffTex != 0) glDeleteTextures(1, &frameBuffTex);
             glGenTextures(1, &frameBuffTex);
@@ -34,6 +36,7 @@ namespace holubiho {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBuffTex, 0);
         }
 
+        /// @brief Creates or recreates the depth renderbuffer attachment for the framebuffer.
         void createRenderBuff() {
             if (depthRbo != 0) {
                 glDeleteRenderbuffers(1, &depthRbo);
@@ -46,6 +49,13 @@ namespace holubiho {
 
 
     public:
+
+        /// @brief Constructs a FrameBuffer object with the specified width, height, internal format, data format, and data type. Initializes the framebuffer by creating the color texture and depth renderbuffer attachments, and checks for completeness.
+        /// @param sWidth The width of the framebuffer in pixels.
+        /// @param sHeight The height of the framebuffer in pixels.
+        /// @param sInternalFormat The internal format of the color texture (e.g., GL_RGBA32UI for unsigned integer data or GL_RGBA8 for unsigned byte data).
+        /// @param sDataFormat The format of the pixel data (e.g., GL_RGBA_INTEGER for unsigned integer data or GL_RGBA for unsigned byte data).
+        /// @param sDataType The data type of the pixel data (e.g., GL_UNSIGNED_INT for unsigned integer data or GL_UNSIGNED_BYTE for unsigned byte data).
         FrameBuffer(int sWidth, int sHeight, GLint sInternalFormat, GLenum sDataFormat, GLenum sDataType) {
             width = sWidth;
             height = sHeight;
@@ -81,15 +91,19 @@ namespace holubiho {
             }
         }
 
-
+        /// @brief Binds the framebuffer for rendering. Subsequent rendering commands will target this framebuffer until it is unbound.
         void Bind() {
             glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         }
 
+        /// @brief Unbinds the framebuffer, reverting to the default framebuffer (usually the screen). After calling this method, rendering commands will target the default framebuffer.
         void Unbind() {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
+        /// @brief Resizes the framebuffer to the specified width and height. This involves updating the dimensions of the color texture and depth renderbuffer attachments to match the new size.
+        /// @param newWidth The new width of the framebuffer in pixels.
+        /// @param newHeight The new height of the framebuffer in pixels.
         void OnResize(int newWidth, int newHeight) {
             width = newWidth;
             height = newHeight;

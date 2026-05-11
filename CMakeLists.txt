@@ -55,7 +55,7 @@ FetchContent_MakeAvailable(stduuid)
 FetchContent_Declare(
         assimp
         GIT_REPOSITORY https://github.com/assimp/assimp.git
-        GIT_TAG v5.4.3 # Вкажіть потрібну версію або хеш
+        GIT_TAG v6.0.5 # Вкажіть потрібну версію або хеш
 )
 
 # Вимкнення зайвих функцій для прискорення збірки
@@ -160,15 +160,13 @@ add_executable(viewer main.cpp
         core/IndexBuffer.h
         core/UniformBuffer.cpp
         core/UniformBuffer.h
-        core/MeshAnim.cpp
-        core/MeshAnim.h
         core/Texture.cpp
         core/Texture.h
         core/Material.cpp
         core/Material.h
         core/stb_image.cpp
-        gui/ModelLoadGUI.cpp
-        gui/ModelLoadGUI.h
+        gui/Debug.cpp
+        gui/Debug.h
         ObjectScripts/ObjectScript.cpp
         ObjectScripts/ObjectScript.h
         ObjectScripts/SkyboxScript.cpp
@@ -194,6 +192,7 @@ add_executable(viewer main.cpp
         setup.h
         ObjectScripts/BiplaneScript.cpp
         ObjectScripts/BiplaneScript.h
+        setup.cpp
 )
 
 #add_executable(birds c.cpp test_models/birds.c

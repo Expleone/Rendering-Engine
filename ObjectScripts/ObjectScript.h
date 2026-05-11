@@ -5,6 +5,8 @@
 #ifndef VIEWER_OBJECTSCRIPT_H
 #define VIEWER_OBJECTSCRIPT_H
 
+
+// Default base class for all scripts that can be attached to scene objects. Provides a common interface and access to the owning object.
 namespace holubiho {
     class SceneObject;
 

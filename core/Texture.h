@@ -126,7 +126,7 @@ public:
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     }
 
-    Texture(TexType texType, int width, int height, bool mipmap, GLuint format) : texId(0), type(texType), mipmap(mipmap) {
+    Texture(int width, int height, bool mipmap, GLuint format) : texId(0), type(TexType::Tex2D), mipmap(mipmap) {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

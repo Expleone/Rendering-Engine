@@ -9,6 +9,7 @@
 namespace holubiho {
     class SceneObject;
 
+    /// @brief Base class for all components that can be attached to SceneObjects. Provides a pointer to the owning SceneObject and a virtual destructor for proper cleanup of derived components.
     class Component {
     protected:
         SceneObject* owner = nullptr;

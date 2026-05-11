@@ -20,16 +20,14 @@ namespace holubiho::Helper {
 
         if (file.is_open()) {
             std::stringstream buffer;
-            buffer << file.rdbuf();      // Зчитуємо буфер файлу в потік
-            file_contents = buffer.str(); // Перетворюємо потік у рядок
+            buffer << file.rdbuf();
+            file_contents = buffer.str();
             file.close();
 
         } else {
             std::cerr << "Error: couldn't open the file " << filename << std::endl;
             return file_contents;
         }
-
-        // std::cout << file_contents << std::endl;
 
         return file_contents;
     }

@@ -10,7 +10,6 @@ layout (std140) uniform Matrices {
 };
 
 void main() {
-    // Transform vertex position to world space
     vec4 worldPos = model * vec4(aPos, 1.0);
 
     vec3 worldNormal = normalize(normalMatrix * aNormal);

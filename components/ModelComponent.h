@@ -20,11 +20,13 @@
 
 namespace holubiho {
 
+    /// @brief Component that defines a 3D model in the scene. Contains a pointer to a Mesh and Material, as well as properties for rendering options like clickability, culling, and whether to draw the model or its UUID. Provides a Draw method to render the mesh using the assigned material and shader.
     class ModelComponent : public Component {
     public:
         Mesh* mesh = nullptr;
         Material* mat = nullptr;
         bool isClickable = false;
+        // If true, the model will be rendered with front face culling, which can be used for effects like outlining. When enabled, the Draw method will temporarily set OpenGL to cull front faces before drawing the mesh, and then restore it to cull back faces afterward.
         bool cullFront = false;
         bool drawUUID = true;
         bool draw = true;
