@@ -31,6 +31,7 @@ namespace holubiho {
         }
         if (plane && plane->hasBeenInteracted && !isMoving) {
             isMoving = true;
+            plane->hasClickableParts = false;
             createCurveToLocalPoint(flightPath->getPoint(0.8), flightPath->getPoint(0.81) - flightPath->getPoint(0.8));
             moveTime = 5.0f;
         }

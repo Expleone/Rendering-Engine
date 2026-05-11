@@ -17,7 +17,7 @@ float tv_maxY = 0.997f;
 
 float dayLengthSeconds = 10.0f;
 
-char* font = "resources/fonts/arial.ttf";
+char* font = "resources/fonts/border-wall-font/BorderWall-OG55o.otf";
 
 std::vector<std::string> skyboxFaces
 {

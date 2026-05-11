@@ -12,6 +12,13 @@
 namespace holubiho {
     void SkyboxScript::Update() {
         if (!sunlight) return;
+        if (button && button->hasBeenInteracted) {
+            isDayAndNightCycleActive = !isDayAndNightCycleActive;
+            button->hasBeenInteracted = false; // Reset the interaction state
+        }
+
+        if (!isDayAndNightCycleActive) return;
+
 
         double coefficient = glm::pi<double>() / dayLengthSeconds * 2.0;
 
@@ -26,4 +33,6 @@ namespace holubiho {
 
         sunPos = -curDir;
     }
+
+
 } // BiBuild

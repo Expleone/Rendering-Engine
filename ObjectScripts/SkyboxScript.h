@@ -18,6 +18,8 @@ class SkyboxScript : public ObjectScript {
     double startTime;
     double prevTime{};
     LightComponent* sunlight;
+    SceneObject* button = nullptr;
+    bool isDayAndNightCycleActive = true;
 
 
 public:
@@ -33,6 +35,10 @@ public:
             model->mat->AddInfo("sunPos", &sunPos, UniformType::Vec3);
     }
     void Update() override;
+    void SetButton(SceneObject* btn) {
+        button = btn;
+    }
+
 };
 
 } // BiBuild

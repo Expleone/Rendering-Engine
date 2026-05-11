@@ -29,6 +29,7 @@
 #include "ObjectScripts/TextScript.h"
 #include "ObjectScripts/TVScript.h"
 #include "gui/Debug.h"
+#include "ObjectScripts/SkyboxScript.h"
 
 const int WIN_WIDTH  = 1280;
 const int WIN_HEIGHT = 720;
@@ -111,7 +112,7 @@ int main() {
     waterShader->AddInfo("time", holubiho::Time::fCurrentTimePointer(), holubiho::UniformType::Float);
 
 
-    holubiho::TextGenerator::Init("resources/fonts/arial/ARIAL.TTF");
+    holubiho::TextGenerator::Init(font);
     SetupInputBindings();
 
 
@@ -142,8 +143,6 @@ int main() {
     auto plane = SetupPlane(&scene, &Debug);
     cameraScript->SetPlaneObject(plane);
 
-    int framen = 0;
-    // Main loop
 
 
 
@@ -165,6 +164,15 @@ int main() {
     boat->transform->localPosition = glm::vec3(-10.123f, 0.069f, -9.469f);
     boat->transform->localRotation = glm::angleAxis(glm::radians(-70.0f), glm::vec3(0,1,0)) * glm::angleAxis(glm::radians(15.0f), glm::vec3(1,0,0));
     boat->transform->localScale = glm::vec3(0.547f);
+
+    auto stopDayNightCycle = scene.CreateObject("stopDayNightCycle");
+    auto model = stopDayNightCycle->AddComponent<holubiho::ModelComponent>();
+    model->mesh = holubiho::ResourceManager::GetMesh("resources/cube.glb");
+    model->mat = holubiho::ResourceManager::CreateMaterial("NextButtonMat");
+    auto skyboxScript = scene.skybox->GetScript<holubiho::SkyboxScript>();
+    skyboxScript->SetButton(stopDayNightCycle);
+    stopDayNightCycle->transform->localPosition = glm::vec3(0, 0, -17.0f);
+
 
 
     while (!glfwWindowShouldClose(holubiho::RenderSystem::GetGLFWWindow())) {
