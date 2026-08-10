@@ -116,7 +116,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(freetype)
 
-add_executable(project_pgr main.cpp
+add_executable(REngine main.cpp
         core/InputHandler.cpp
         core/InputHandler.h
         BiBuild.h
@@ -183,6 +183,8 @@ add_executable(project_pgr main.cpp
         ObjectScripts/BiplaneScript.h
         setup.cpp
 )
+
+set_target_properties(project_pgr PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 find_package(OpenGL REQUIRED)
 

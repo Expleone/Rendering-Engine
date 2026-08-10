@@ -1,0 +1,57 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers only when a tag starting with 'v' is pushed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    # Strictly required to allow the runner to create a Release on your repository
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libgl1-mesa-dev libglfw3-dev libassimp-dev libfreetype6-dev libvlc-dev libxkbcommon-dev libwayland-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Engine
+        run: cmake --build build --config Release
+
+      - name: Package Artifacts
+        run: |
+          # 1. Create a staging directory
+          mkdir -p release_package/shaders
+          mkdir -p release_package/resources
+          
+          # 2. Copy the compiled executable (assuming your CMake target generates an executable named BiBuild)
+          find REngine -maxdepth 1 -type f -executable -exec cp {} release_package/ \;
+          
+          # 3. Copy necessary runtime assets to the staging folder
+          cp -r shaders/* release_package/shaders/
+          cp -r resources/* release_package/resources/
+          
+          # 4. Copy configuration and data files needed at runtime
+          cp keybinds.txt release_package/ || true
+          cp nature_settings.txt release_package/ || true
+          cp tv_videos.txt release_package/ || true
+          
+          # 5. Compress the directory into a tarball
+          cd release_package
+          tar -czvf ../REngine-Linux-x86_64.tar.gz .
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: REngine-Linux-x86_64.tar.gz
+          generate_release_notes: true # Automatically summarizes PRs and commits since the last release

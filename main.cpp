@@ -91,7 +91,7 @@ void CheckInteraction() {
 int main() {
     if (!glfwInit()) return -1;
 
-    loadConfig("natureSettings.txt");
+    loadConfig("nature_settings.txt");
     // Initialize GLAD
     holubiho::SceneManager scene = holubiho::SceneManager();
     holubiho::RenderSystem::Initialize(WIN_WIDTH,WIN_HEIGHT, WIN_TITLE, scene.cameraObject);
@@ -182,7 +182,7 @@ int main() {
              if (!keybiningsReloaded) {
                  SetupInputBindings();
                  LoadTVVideosTXT("tv_videos.txt", tv);
-                 loadConfig("natureSettings.txt");
+                 loadConfig("nature_settings.txt");
                 keybiningsReloaded = true;
             }
         }else {
