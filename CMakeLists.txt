@@ -184,11 +184,11 @@ add_executable(REngine main.cpp
         setup.cpp
 )
 
-set_target_properties(project_pgr PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+set_target_properties(REngine PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(project_pgr PRIVATE
+target_link_libraries(REngine PRIVATE
         imgui_lib
         glfw
         glad
@@ -202,7 +202,7 @@ target_link_libraries(project_pgr PRIVATE
 
 
 
-target_include_directories(project_pgr PRIVATE ${stb_SOURCE_DIR}
+target_include_directories(REngine PRIVATE ${stb_SOURCE_DIR}
         ${VLC_INCLUDE_DIRS})
 
-target_link_directories(project_pgr PRIVATE ${VLC_LIBRARY_DIRS})
+target_link_directories(REngine PRIVATE ${VLC_LIBRARY_DIRS})
